@@ -4,7 +4,7 @@
 #include <math.h>
 #include <vector>
 #include <cmath>
-#include <ctime>
+#include <time.h>
 #include <string.h>
 
 #define KEY_ESCAPE 27
@@ -68,6 +68,7 @@ float rotY=0;
 
 time_t maxTime;
 time_t userTime;
+time_t startTime;
 
 //Initializing variables for texturing
 GLuint texture[4];
@@ -309,7 +310,7 @@ void keyOperations() {
 	if (activeKey['w'] || activeKey['W']){
 		if (speed > (-1)*myCar.maxSpeed)
 		{
-			printf("the speed of the car is not able to go beyond %f, where limit is %s\n", speed, glGetString(GL_VERSION));
+			// printf("the speed of the car is not able to go beyond %f, where limit is %s\n", speed, glGetString(GL_VERSION));
 			speed -= myCar.acc;
 		}
 	}
@@ -774,38 +775,67 @@ void display()
 		glVertex2f(0.0, 100.0);
 	glEnd();
 
-	// glBegin(GL_QUADS);
-	// 	glColor3f(0.0f, 0.5f, 0.0f);
-	// 	glVertex2f(0.0, win.height);
-	// 	glVertex2f(0.0, win.height - 200.0);
-	// 	glVertex2f(win.width, win.height - 200.0);
-	// 	glVertex2f(win.width, win.height);
-	// glEnd();
-	glBegin(GL_POLYGON);
-		glColor3f(0.0f, 0.0f, 0.0f);
-		// glVertex2f(win.width / 2, win.height - 100.0);
-		for (int ii = 0; ii < 7; ii += 1.0)
-		{
-			glVertex2f(win.width/2 + sin(ii)*100, win.height - 100.0 + cos(ii)*100);
-		}
-		// glVertex2f(win.width / 2, win.height - 200.0);
-		// glVertex2f(win.width / 2 + 20, win.height - 100.0);
-		glVertex2f(win.width/2, win.height);
+	/*
+	*	Building the Speedometer
+	*/
+	glTranslatef(win.width/4, win.height-100, 0.0f);
+	glRotatef(60*sqrt(speed*speed) + 50, 0.0f, 0.0f, 1.0f);
+	glBegin(GL_TRIANGLES);
+		glColor3f(1.0f, 0.0f, 0.0f);
+		glVertex2f(2.0f, 0.0f);
+		glVertex2f(0.0f,100.0f);
+		glVertex2f(-2.0f,0.0f);
+		// glVertex2f(0.0f, -100.0f);
 	glEnd();
-
+	char Speed_Display[30];
+	int lenghOfQuote;
+	glRotatef(-60*sqrt(speed*speed) - 50, 0.0f, 0.0f, 1.0f);
+		/*
+		And Printing that speed as well
+		*/
+		glScalef(0.2, 0.2, 0.2);
+		glRotatef(180, -1.0, 0.0, 0.0);
+		glTranslatef(-350.0f,-200.0f, 0.0f);
+		sprintf(Speed_Display, "%.0f km/h", -50*speed);
+    	lenghOfQuote = (int)strlen(Speed_Display);
+		for (int i = 0; i < lenghOfQuote; i++)
+		{
+		  	glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
+		    // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
+		    glutStrokeCharacter(GLUT_STROKE_ROMAN, Speed_Display[i]);
+		}
+		glTranslatef(350.0f, 200.0f, 0.0f);
+		glScalef(5, 5, 5);
+		glRotatef(180, 1.0, 0.0, 0.0);
+	glTranslatef(-1*win.width/4, -1*(win.height-100), 0.0f);
+	/*
+	*	Building the Steering Wheel
+	*/
+	glTranslatef(win.width/2, win.height+100, 0.0f);
+	glRotatef(2*turn, 0.0f, 0.0f, 1.0f);
+	glBegin(GL_TRIANGLE_STRIP);
+		for (int ii = 0.6; ii < 7; ii += 1.0)
+		{
+			glColor3f((ii%2), 0.0f, 0.0f);
+			glVertex2f(sin(ii)*300, cos(ii)*300);
+		}
+		// glVertex2f(0.0f, -100.0f);
+	glEnd();
+	glRotatef(-2*turn, 0.0f, 0.0f, 1.0f);
+	glTranslatef(-1*win.width/2, -1*(win.height+100), 0.0f);
 	/*
 	* Trying to write some stuff inside the HUD created.
 	*/
 	// char* myCharString = "Yo babes";
 	// glutStrokeCharacter(GLUT_STROKE_ROMAN, 1/*myCharString*/);
 	char quote[3][80];
-	int lenghOfQuote;
 	glScalef(0.4, 0.4, 0.5);
 	glTranslatef(0.0f,150.0f, 0.0f);
 	glRotatef(180, 1.0, 0.0, 0.0);
 	if (space_pressed_to_start_race)
 	{
-		sprintf(quote[0], "Speed = %.0f      Turn Angle=%.0f", -50*speed, turn);
+		userTime = clock()-startTime;
+		sprintf(quote[0], "Time: %0.2f", (float)(userTime)/CLOCKS_PER_SEC);
 	
     	lenghOfQuote = (int)strlen(quote[0]);
     	glPushMatrix();
@@ -853,18 +883,18 @@ void startDisplay()
 {
 	char quote[4][80];
 	int lenghOfQuote;
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		     // Clear Screen and Depth Buffer
+	glClear(GL_COLOR_BUFFER_BIT);					//Clear the colour buffer (more buffers later on)
 	glLoadIdentity();
 	glTranslatef(0.0f, 0.0f, -10.0f);
 
-	glPushMatrix();
-		glColor3f(0.3f, 0.4f, 0.0f);
-		glBegin(GL_TRIANGLES);
-			glVertex3f(0.0f, 1.0f, 0.0f);
-			glVertex3f(1.0f, 0.0f, 0.0f);
-			glVertex3f(0.0f, 0.0f, 1.0f);
-		glEnd();
-	glPopMatrix();
+	// glPushMatrix();
+		// glColor3f(0.3f, 0.4f, 0.0f);
+		// glBegin(GL_TRIANGLES);
+		// 	glVertex3f(0.0f, 1.0f, 0.0f);
+		// 	glVertex3f(1.0f, 0.0f, 0.0f);
+		// 	glVertex3f(0.0f, 0.0f, 1.0f);
+		// glEnd();
+	// glPopMatrix();
 /*
 * Trying to do some HUD here
 */
@@ -914,7 +944,7 @@ void startDisplay()
 	    	glTranslatef(-(lenghOfQuote*77), -200, 0.0);
 		    for (int i = 0; i < lenghOfQuote; i++)
 		    {
-		    	glColor4f(255.0f, 0.9f, 0.9f, 1.0f);
+		    	glColor4f(0.0f, 0.1f, 0.2f, 1.0f);
 		        // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
 		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
 		    }
@@ -952,7 +982,7 @@ void startDisplay()
 	    	glTranslatef(-(lenghOfQuote*77), -200, 0.0);
 		    for (int i = 0; i < lenghOfQuote; i++)
 		    {
-		    	glColor4f(0.0f, 0.0f, 0.9f, 0.2f);
+		    	glColor4f(0.0f, 0.0f, 0.0f, 0.2f);
 		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
 		    }
 		}
@@ -988,7 +1018,7 @@ void startDisplay()
 	    	glTranslatef(-(lenghOfQuote*65), -200, 0.0);
 		    for (int i = 0; i < lenghOfQuote; i++)
 		    {
-		    	glColor4f(0.0f + (jj == level), 0.0f + (jj == level), 0.0f, 1.0f);
+		    	glColor4f(0.0f + 0.4*(jj == level), 0.0f + 0.4*(jj == level), 0.0f, 1.0f);
 		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
 		    }
 		}
@@ -1020,7 +1050,7 @@ void initialize ()
     glEnable( GL_DEPTH_TEST );
     glDepthFunc( GL_LEQUAL );
     glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );						// specify implementation-specific hints
-	glClearColor(0.1, 0.2, 0.5, 1.0);											// specify clear values for the color buffers								
+	glClearColor(0.4, 0.3, 0.5, 1.0);											// specify clear values for the color buffers								
 	loadTexture();
 	glEnable(GL_TEXTURE_2D);
 	glShadeModel(GL_FLAT);
@@ -1099,6 +1129,7 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
 	    	rotY = 0;
 	    	speed = 0;
 	    	space_pressed_to_start_race = true;
+	    	startTime = clock();
 	    	break;
 	    }
 
@@ -1262,7 +1293,7 @@ int main(int argc, char **argv)
 	myCar.maxTurn = 65;
 	myCar.maxSpeed = 4.0;
 	myCar.acc = 0.02;
-	myCar.turnControl = 1.6;
+	myCar.turnControl = 1.8;
 	myCar.objFileName = "media/avi.obj";
 
 	currTrack.id = 2;
