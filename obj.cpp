@@ -81,9 +81,9 @@ void reshape(int w,int h)
 void drawObjList()
 {
 	glPushMatrix();
-	glTranslatef(0,-20.00,-105);
+	glTranslatef(0,-5.00,-40);
 	glColor3f(1.0,0.23,0.27);
-	glScalef(0.6,0.6,0.6);
+	glScalef(1.0,1.0,1.0);
 	glRotatef(yrot,0,1,0);
 	glCallList(ObjList);
 	glPopMatrix();
@@ -119,7 +119,7 @@ int main(int argc,char **argv)
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
 	glutIdleFunc(display);
-	loadObj("track/race.obj");//replace porsche.obj with radar.obj or any other .obj to display it
+	loadObj("media/car.obj");//replace porsche.obj with radar.obj or any other .obj to display it
 
 	glutKeyboardFunc(keyDown);
 	glutMainLoop();

@@ -2,8 +2,12 @@
 #include <GL/gl.h>		   // Open Graphics Library (OpenGL) header
 #include <GL/glut.h>	   // The GL Utility Toolkit (GLUT) Header
 #include <math.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 
 #define KEY_ESCAPE 27
+#define PI 3.14159
+#define FPS 25				//number of frames rendered persecond
 
 GLuint ObjList;
 
@@ -16,16 +20,27 @@ typedef struct {
 	float z_near;
 	float z_far;
 } glutWindow;
-
 glutWindow win;
+
+typedef struct{ 					//All these variables have to be changed for each car
+	float maxTurn;
+	float maxSpeed;
+} car;
+car myCar;
+
+typedef struct {
+	float friction;
+} raceTrack;
+raceTrack currTrack;
+
 bool* activeKey = new bool[256];
 
+float speed=0;
+float dSpeed = 0.01;
+float turn=0;
 float initialx =0;
-float changex = 0.1;
-float initialz =0;
-float changez = 0.1;
-float initialy = 0;
-float changey = 0.005;
+float initialz=0;
+float rotY=0;
 
 //Initializing variables for texturing
 GLuint texture;
@@ -132,20 +147,54 @@ Image * loadTexture(){
 
 void keyOperations() {
 	if (activeKey['w']){
-		initialz -= changez*cos(initialy);
-		initialx -= changex*sin(initialy);
+		if (speed > (-1)*myCar.maxSpeed)
+		{
+			speed -= dSpeed;
+		}
 	}
 	if (activeKey['s']){
-		initialz += changez*cos(initialy);
-		initialx += changex*sin(initialy);
+		if (speed < myCar.maxSpeed)
+		{
+			speed += dSpeed;
+		}
 	}
 	if (activeKey['a']){
-		initialy += changey;
+		if (turn > (-1)*myCar.maxTurn)
+		{
+			turn -= 1;
+		}
 	}
 	if (activeKey['d']){
-		initialy -= changey;
+		if (turn < myCar.maxTurn)
+		{
+			turn += 1;
+		}
 	}
-
+	printf("speed = %f, and turn = %f\n => rotation = %f\n", speed, turn, rotY);
+	speed -= speed*(currTrack.friction);
+	rotY = rotY*180/PI; 
+	rotY += (turn*speed)/FPS;
+	if (rotY >= 180)
+	{
+		rotY -= 360;
+	}
+	else if (rotY < -180)
+	{
+		rotY += 360;
+	}
+	if ((speed != 0)&& (turn != 0))
+	{
+		if (turn*speed > 0)
+		{
+			turn -= 1*speed;
+		}
+		else {
+			turn += 1*speed;
+		}
+	}
+	rotY = (rotY*PI)/180;
+	initialz += speed*cos(rotY);
+	initialx += speed*sin(rotY);
 }
 
 void loadObj(char *fname)
@@ -162,6 +211,7 @@ void loadObj(char *fname)
 		exit(1);
 	}
 	glPointSize(12.0);
+	float flag1=0, flag2=0;
 	glNewList(ObjList, GL_COMPILE);
 	{
 		glPushMatrix();
@@ -196,12 +246,26 @@ void loadObj(char *fname)
 			// 	zprev1 = z;
 			// }
 			read=fscanf(fp,"%c %f %f %f",&ch,&x,&y,&z);
-			glTexCoord2f(1.0, 0.0);
 			if(read==4&&ch=='v')
 			{
+				glTexCoord2f(flag1, flag2);
 				glVertex3f(x,y,z);
 				// xprev2 = x;
 				// zprev2 = z;
+				if (flag2==0)
+				{
+					flag2 =1;
+				}
+				else {
+					flag2 = 0;
+				}
+				if (flag1==0)
+				{
+					flag1 =1;
+				}
+				else {
+					flag1 = 0;
+				}
 			}
 			/*read=fscanf(fp,"%c %f %f %f",&ch,&x,&y,&z);
 			if(read==4&&ch=='v')
@@ -224,10 +288,38 @@ void display()
 	keyOperations();
 	// glRotatef(initialy, 0.0f, 1.0f, 0.0f);
 	gluLookAt(initialx,0,initialz,
-		initialx-sin(initialy),0,initialz-cos(initialy),
+		initialx-sin(rotY),0,initialz-cos(rotY),
 		0,1,0);
 	// glTranslatef(0.0f, 0.0f, initialz);
 	
+	// glBegin(GL_QUADS);
+	// 	// glColor3f(0.0, 0.0, 0.0);
+	// 		glTexCoord2f(0.0, 0.0);
+	// 	glVertex3f(-100.0f, -2.0001f,-100.0f);
+	// 		glTexCoord2f(0.0, 1.0);
+	// 	glVertex3f(-100.0f, -2.0001f, 100.0f);
+	// 		glTexCoord2f(1.0, 1.0);
+	// 	glVertex3f( 100.0f, -2.0001f, 100.0f);
+	// 		glTexCoord2f(1.0, 0.0);
+	// 	glVertex3f( 100.0f, -2.0001f,-100.0f);
+	// glEnd();
+///////////
+	// Image *image2 = loadGrass();
+	// if(image2 == NULL){
+	//     printf("Image was not returned from loadGrass\n");
+	//     exit(0);
+	// }
+	// makeCheckImage();
+	// glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	// // Create Texture
+	// //glGenTextures(2, texture);
+	// glBindTexture(GL_TEXTURE_2D, texture);
+	// glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); //scale linearly when image bigger than texture
+	// glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); //scale linearly when image smalled than texture
+	// glTexImage2D(GL_TEXTURE_2D, 0, 3, image2->sizeX, image2->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, image2->data);
+
+////////
+
 	float x;
 	 
 	while(x < 52.0f) {
@@ -266,9 +358,10 @@ void initialize ()
     glShadeModel( GL_SMOOTH );
     glClearDepth( 1.0f );														// specify the clear value for the depth buffer
     glEnable( GL_DEPTH_TEST );
+    glEnable( GL_LIGHTING );
     glDepthFunc( GL_LEQUAL );
     glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );						// specify implementation-specific hints
-	glClearColor(0.2, 1.0, 0.2, 1.0);											// specify clear values for the color buffers								
+	glClearColor(0.2, 0.9, 0.9, 0.5);											// specify clear values for the color buffers								
 
 	Image *image1 = loadTexture();
 	if(image1 == NULL){
@@ -287,7 +380,7 @@ void initialize ()
 
 //	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 	glEnable(GL_TEXTURE_2D);
-	glShadeModel(GL_FLAT);
+	// glShadeModel(GL_FLAT);
 
 }
 
@@ -319,6 +412,11 @@ int main(int argc, char **argv)
 	win.field_of_view_angle = 45;
 	win.z_near = 1.0f;
 	win.z_far = 500.0f;
+
+	myCar.maxTurn = 65;
+	myCar.maxSpeed = 0.4;
+
+	currTrack.friction = 0.05;
 
 	// initialize and run program
 	glutInit(&argc, argv);                                      // GLUT initialization

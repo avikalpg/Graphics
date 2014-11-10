@@ -1,0 +1,12 @@
+compile file using this command:-
+g++ track01.cpp -lglut -lGLU -lGL -o game
+and run the executable
+
+game play:-
+w = to accelerate
+s = break/acc in reverse
+a = turn steering left
+d = turn steering right
+
+t = the track changes
+esc = the window closes
