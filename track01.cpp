@@ -18,6 +18,7 @@
 #define PLAYING_SCREEN		2
 #define PAUSE_SCREEN		3
 #define LEVEL_CHANGE_SCREEN	4
+#define SETTING_SCREEN		5
 
 GLuint ObjList;
 
@@ -55,6 +56,9 @@ raceTrack currTrack;
 
 bool* activeKey = new bool[260];
 bool space_pressed_to_start_race = false;
+bool music_on = false;
+bool sound_effects_on = false;
+bool third_person_view = false;
 
 int frame_type;
 int selector;
@@ -138,7 +142,8 @@ int ImageLoad(char *filename, Image *image) {
         printf("Bpp from %s is not 24: %u\n", filename, bpp);
         return 0;
     }
-    // seek past the rest of the bitmap header.
+
+   // seek past the rest of the bitmap header.
     fseek(file, 24, SEEK_CUR);
     // read the data.
     image->data = (char *) malloc(size);
@@ -334,986 +339,2232 @@ void keyOperations() {
 	}
 	// printf("x-coord = %f, and z-coord = %f\n => rotation = %f\n", initialx, initialz, rotY);
 	speed -= speed*(currTrack.friction);
+
 	rotY = rotY*180/PI; 
+
 	rotY += (turn*speed)/FPS;
+
 	if (rotY >= 180)
+
 	{
+
 		rotY -= 360;
+
 	}
+
 	else if (rotY < -180)
+
 	{
+
 		rotY += 360;
+
 	}
+
 	if ((speed != 0)&& (turn != 0))			//automatic reduction of turn
+
 	{
+
 		if (turn*speed > 0)
+
 		{
+
 			turn -= 1*speed;
+
 		}
+
 		else {
+
 			turn += 1*speed;
+
 		}
+
 	}
+
 	rotY = (rotY*PI)/180;
+
 	//Restricting the movement of the car, so that it does not go out of the frame ...
+
 	if (initialz > currTrack.Z_max_world)
+
 	{
+
 		speed = 0;
+
 		initialz = currTrack.Z_max_world;
+
 	}
+
 	if (initialz < currTrack.Z_min_world)
+
 	{
+
 		speed =0;
+
 		initialz = currTrack.Z_min_world;
+
 	}
+
 	if (initialx > currTrack.X_max_world)
+
 	{
+
 		speed = 0;
+
 		initialx = currTrack.X_max_world;
+
 	}
+
 	else if (initialx < currTrack.X_min_world)
+
 	{
+
 		speed =0;
+
 		initialx = currTrack.X_min_world;
+
 	}
+
 	initialx += speed*sin(rotY);
+
 	initialz += speed*cos(rotY);
+
 }
 
+
+
 // void DrawEnclosingSphere(float radius, unsigned int rings, unsigned int sectors)
+
 // {
+
+
 
 // }
 
+
+
 /*
+
 *	The Display of the game play
+
 */
+
 void display() 
+
 {
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		     // Clear Screen and Depth Buffer
+
 	glLoadIdentity();
+
 	glTranslatef(0.0f,0.0f,-10.0f);			
+
 	keyOperations();
+
 	// glRotatef(initialy, 0.0f, 1.0f, 0.0f);
+
 	if (space_pressed_to_start_race)
+
 	{
+
 		gluLookAt(initialx,1,initialz,
+
 			initialx-sin(rotY),1,initialz-cos(rotY),
+
 			0,1,0);
+
 	}
+
 	else {
+
 		gluLookAt((currTrack.X_max_world + currTrack.X_min_world)/2 + 150,100,(currTrack.Z_max_world + currTrack.Z_min_world)/2+200,
+
 			(currTrack.X_max_world + currTrack.X_min_world)/2,1,(currTrack.Z_max_world + currTrack.Z_min_world)/2,
+
 			0,1,0);
+
 		// glScalef(0.01, 0.01, 0.01)
+
 	}
+
 	// glTranslatef(0.0f, 0.0f, initialz);
+
 	
+
 	glPushMatrix();
+
 	glTranslatef(6,-2.00,5);
+
 	if (space_pressed_to_start_race)
+
 	{
+
 		/*
+
 		* drawing the enclosing box
+
 		*/
+
 		glColor3f(0.5f, 0.8f, 0.5f);
+
 		glBindTexture(GL_TEXTURE_2D, texture[1]);
+
 		glBegin(GL_QUADS);
+
 		for (int i = currTrack.Z_min_world; i < currTrack.Z_max_world; i+=10.0f)
+
 		{
+
 			for (int j = currTrack.X_min_world; j < currTrack.X_max_world; j+=10.0f)
+
 			{
+
 				glTexCoord2f(0.0, 0.0);
+
 					glVertex3f(j,-0.0001f, i+10.0f);
+
 				glTexCoord2f(0.0, 1.0);
+
 					glVertex3f(j,-0.0001f,i);
+
 				glTexCoord2f(1.0, 1.0);
+
 					glVertex3f(j+10.0f,-0.0001f,i);
+
 				glTexCoord2f(1.0, 0.0);
+
 					glVertex3f(j+10.0f,-0.0001f, i+10.0f);			
+
 			}
+
 		}
+
 		glEnd();
+
 		glColor3f(0.75f, 0.75f, 0.75f);
+
 		glBindTexture(GL_TEXTURE_2D, texture[2]);
+
 		// DrawEnclosingSphere(300, 10, 10);
+
 		glBegin(GL_QUADS);
+
 		for (int i = currTrack.Z_min_world; i < currTrack.Z_max_world; i+=25.0f)
+
 		{
+
 			for (int j = currTrack.X_min_world; j < currTrack.X_max_world; j+=25.0f)
+
 			{
+
 				glTexCoord2f(0.0, 0.0);
+
 					glVertex3f(j,25.0f, i+25.0f);
+
 				glTexCoord2f(0.0, 1.0);
+
 					glVertex3f(j,25.0f,i);
+
 				glTexCoord2f(1.0, 1.0);
+
 					glVertex3f(j+25.0f,25.0f,i);
+
 				glTexCoord2f(1.0, 0.0);
+
 					glVertex3f(j+25.0f,25.0f, i+25.0f);			
+
 			}
+
 		}
+
 		glEnd();
+
+
 
 		glColor3f(1.0f, 1.0f, 1.0f);
+
 		// glBindTexture(GL_TEXTURE_2D, texture[3]);
+
 		// DrawEnclosingSphere(300, 10, 10);
+
 		glBegin(GL_QUADS);
+
 		for (int i = currTrack.X_min_world; i < currTrack.X_max_world; i+=25.0f)
+
 		{
+
 			glTexCoord2f(0.0, 0.0);
+
 				glVertex3f(i, 0.0f, currTrack.Z_min_world);
+
 			glTexCoord2f(1.0, 0.0);
+
 				glVertex3f(i + 25.0f, 0.0f, currTrack.Z_min_world);
+
 			glTexCoord2f(1.0, 1.0);
+
 				glVertex3f(i + 25.0f, 25.0f, currTrack.Z_min_world);
+
 			glTexCoord2f(0.0, 1.0);
+
 				glVertex3f(i, 25.0f, currTrack.Z_min_world);
+
 		}
+
 		for (int i = currTrack.X_min_world; i < currTrack.X_max_world; i+=25.0f)
+
 		{
+
 			glTexCoord2f(0.0, 0.0);
+
 				glVertex3f(i, 0.0f, currTrack.Z_max_world);
+
 			glTexCoord2f(1.0, 0.0);
+
 				glVertex3f(i + 25.0f, 0.0f, currTrack.Z_max_world);
+
 			glTexCoord2f(1.0, 1.0);
+
 				glVertex3f(i + 25.0f, 25.0f, currTrack.Z_max_world);
+
 			glTexCoord2f(0.0, 1.0);
+
 				glVertex3f(i, 25.0f, currTrack.Z_max_world);
+
 		}
+
 			for (int i = currTrack.Z_min_world; i < currTrack.Z_max_world; i+=25.0f)
+
 		{
+
 			glTexCoord2f(0.0, 0.0);
+
 				glVertex3f(currTrack.X_min_world, 0.0f,i);
+
 			glTexCoord2f(1.0, 0.0);
+
 				glVertex3f(currTrack.X_min_world, 0.0f,i+25.0f);
+
 			glTexCoord2f(1.0, 1.0);
+
 				glVertex3f(currTrack.X_min_world, 25.0f,i+25.0f);
+
 			glTexCoord2f(0.0, 1.0);
+
 				glVertex3f(currTrack.X_min_world, 25.0f,i);
+
 		}
+
 			for (int i = currTrack.Z_min_world; i < currTrack.Z_max_world; i+=25.0f)
+
 		{
+
 			glTexCoord2f(0.0, 0.0);
+
 				glVertex3f(currTrack.X_max_world, 0.0f,i);
+
 			glTexCoord2f(1.0, 0.0);
+
 				glVertex3f(currTrack.X_max_world, 0.0f,i+25.0f);
+
 			glTexCoord2f(1.0, 1.0);
+
 				glVertex3f(currTrack.X_max_world, 25.0f,i+25.0f);
+
 			glTexCoord2f(0.0, 1.0);
+
 				glVertex3f(currTrack.X_max_world, 25.0f,i);
+
 		}
+
 		glEnd();
+
 	}
 
+
+
 	/*
+
 	* drawing the track
+
 	*/
+
 	glColor3f(3.0f,3.0f,3.0f);
+
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
+
 	if (currTrack.id == 2) {
+
 		glBegin(GL_QUADS);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( -69.6982f, 0.0000f, 146.3044f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( -44.6982f, 0.0000f, 146.3044f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( -44.6982f, 0.0000f, -3.6956f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( -69.6982f, 0.0000f, -3.6956f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( -69.6982f, 0.0000f, -3.6956f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( -44.6982f, 0.0000f, -3.6956f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( -41.5202f, 0.0000f, -20.8055f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( -65.0125f, 0.0000f, -29.3560f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( -65.0125f, 0.0000f, -29.3560f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( -41.5202f, 0.0000f, -20.8055f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( -32.8378f, 0.0000f, -35.8439f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( -51.9889f, 0.0000f, -51.9136f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( -51.9889f, 0.0000f, -51.9136f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( -32.8378f, 0.0000f, -35.8439f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( -19.5355f, 0.0000f, -47.0058f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( -32.0355f, 0.0000f, -68.6564f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( -32.0355f, 0.0000f, -68.6564f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( -19.5355f, 0.0000f, -47.0058f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( -3.2180f, 0.0000f, -52.9449f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( -7.5592f, 0.0000f, -77.5651f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( -7.5592f, 0.0000f, -77.5651f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( -3.2180f, 0.0000f, -52.9449f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 14.1469f, 0.0000f, -52.9449f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 18.4881f, 0.0000f, -77.5651f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 18.4881f, 0.0000f, -77.5651f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 14.1469f, 0.0000f, -52.9449f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 30.4644f, 0.0000f, -47.0058f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 42.9644f, 0.0000f, -68.6564f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 42.9644f, 0.0000f, -68.6564f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 30.4644f, 0.0000f, -47.0058f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 43.7667f, 0.0000f, -35.8439f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 62.9178f, 0.0000f, -51.9136f);
 
-		glTexCoord2f(0.0, 0.0);
-		 glVertex3f( 62.9178f, 0.0000f, -51.9136f);
-		glTexCoord2f(1.0, 0.0);
-		 glVertex3f( 43.7667f, 0.0000f, -35.8439f);
-		glTexCoord2f(1.0, 1.0);
-		 glVertex3f( 52.4491f, 0.0000f, -20.8055f);
-		glTexCoord2f(0.0, 1.0);
-		 glVertex3f( 75.9414f, 0.0000f, -29.3560f);
+
 
 		glTexCoord2f(0.0, 0.0);
-		 glVertex3f( 75.9414f, 0.0000f, -29.3560f);
+
+		 glVertex3f( 62.9178f, 0.0000f, -51.9136f);
+
 		glTexCoord2f(1.0, 0.0);
-		 glVertex3f( 52.4491f, 0.0000f, -20.8055f);
+
+		 glVertex3f( 43.7667f, 0.0000f, -35.8439f);
+
 		glTexCoord2f(1.0, 1.0);
+
+		 glVertex3f( 52.4491f, 0.0000f, -20.8055f);
+
+		glTexCoord2f(0.0, 1.0);
+
+		 glVertex3f( 75.9414f, 0.0000f, -29.3560f);
+
+
+
+		glTexCoord2f(0.0, 0.0);
+
+		 glVertex3f( 75.9414f, 0.0000f, -29.3560f);
+
+		glTexCoord2f(1.0, 0.0);
+
+		 glVertex3f( 52.4491f, 0.0000f, -20.8055f);
+
+		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 55.4644f, 0.0000f, -3.7045f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 80.4644f, 0.0000f, -3.7045f);
 
+
+
 			glTexCoord2f(0.0, 0.0);
+
 			 glVertex3f( 80.4644f, 0.0000f, -3.7045f);
+
 			glTexCoord2f(1.0, 0.0);
+
 			 glVertex3f( 55.4644f, 0.0000f, -3.7045f);
+
 			glTexCoord2f(1.0, 1.0);
+
 			 glVertex3f( 55.4316f, 0.0000f, 146.3044f);
+
 			glTexCoord2f(0.0, 1.0);
+
 			 glVertex3f( 80.4316f, 0.0000f, 146.3044f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 80.4316f, 0.0000f, 146.3044f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 55.4316f, 0.0000f, 146.3044f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 52.4491f, 0.0000f, 163.3138f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 75.9414f, 0.0000f, 171.8643f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 75.9414f, 0.0000f, 171.8643f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 52.4491f, 0.0000f, 163.3138f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 43.7667f, 0.0000f, 178.3522f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 62.9178f, 0.0000f, 194.4219f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 62.9178f, 0.0000f, 194.4219f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 43.7667f, 0.0000f, 178.3522f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 30.4644f, 0.0000f, 189.5141f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 42.9644f, 0.0000f, 211.1647f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 42.9644f, 0.0000f, 211.1647f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 30.4644f, 0.0000f, 189.5141f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 14.1468f, 0.0000f, 195.4532f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 18.4880f, 0.0000f, 220.0734f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 18.4880f, 0.0000f, 220.0734f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 14.1468f, 0.0000f, 195.4532f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( -3.2180f, 0.0000f, 195.4532f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( -7.5592f, 0.0000f, 220.0734f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( -7.5592f, 0.0000f, 220.0734f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( -3.2180f, 0.0000f, 195.4532f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( -19.5356f, 0.0000f, 189.5141f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( -32.0356f, 0.0000f, 211.1647f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( -32.0356f, 0.0000f, 211.1647f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( -19.5356f, 0.0000f, 189.5141f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( -32.8378f, 0.0000f, 178.3522f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( -51.9889f, 0.0000f, 194.4219f);
 
-		glTexCoord2f(0.0, 0.0);
-		 glVertex3f( -51.9889f, 0.0000f, 194.4219f);
-		glTexCoord2f(1.0, 0.0);
-		 glVertex3f( -32.8378f, 0.0000f, 178.3522f);
-		glTexCoord2f(1.0, 1.0);
-		 glVertex3f( -41.5202f, 0.0000f, 163.3138f);
-		glTexCoord2f(0.0, 1.0);
-		 glVertex3f( -65.0125f, 0.0000f, 171.8643f);
+
 
 		glTexCoord2f(0.0, 0.0);
-		 glVertex3f( -65.0125f, 0.0000f, 171.8643f);
+
+		 glVertex3f( -51.9889f, 0.0000f, 194.4219f);
+
 		glTexCoord2f(1.0, 0.0);
-		 glVertex3f( -41.5202f, 0.0000f, 163.3138f);
+
+		 glVertex3f( -32.8378f, 0.0000f, 178.3522f);
+
 		glTexCoord2f(1.0, 1.0);
+
+		 glVertex3f( -41.5202f, 0.0000f, 163.3138f);
+
+		glTexCoord2f(0.0, 1.0);
+
+		 glVertex3f( -65.0125f, 0.0000f, 171.8643f);
+
+
+
+		glTexCoord2f(0.0, 0.0);
+
+		 glVertex3f( -65.0125f, 0.0000f, 171.8643f);
+
+		glTexCoord2f(1.0, 0.0);
+
+		 glVertex3f( -41.5202f, 0.0000f, 163.3138f);
+
+		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( -44.6982f, 0.0000f, 146.3044f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( -69.6982f, 0.0000f, 146.3044f);
 
+
+
 		glEnd();
+
 	}
+
 	else if (currTrack.id == 3) {	
+
 		glBegin(GL_QUADS);
+
 		
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 0.2048f, 0.0000f, 16.3703f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 0.2048f, 0.0000f, 86.3703f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 25.2048f, 0.0000f, 86.3703f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 25.2048f, 0.0000f, 16.3703f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 29.8147f, 0.0000f, -53.3839f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 0.2048f, 0.0000f, 16.3703f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 25.2048f, 0.0000f, 16.3703f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 54.8147f, 0.0000f, -53.3839f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( 29.8148f, 0.0000f, -123.4015f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 29.8147f, 0.0000f, -53.3839f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 54.8147f, 0.0000f, -53.3839f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 54.8148f, 0.0000f, -123.4015f);
 
+
+
 		glTexCoord2f(0.0, 0.0);
+
 		 glVertex3f( -4.2518f, 0.0000f, -193.4343f);
+
 		glTexCoord2f(0.0, 1.0);
+
 		 glVertex3f( 29.8148f, 0.0000f, -123.4015f);
+
 		glTexCoord2f(1.0, 1.0);
+
 		 glVertex3f( 54.8148f, 0.0000f, -123.4015f);
+
 		glTexCoord2f(1.0, 0.0);
+
 		 glVertex3f( 20.7482f, 0.0000f, -193.4343f);
 
+
+
 		 glEnd();
-	}
-	else {
-		currTrack.id++;
+
 	}
 
+	else {
+
+		currTrack.id++;
+
+	}
+
+
+
 	/*
+
 	* Loading the object - car
+
 	*/
+
 	glTranslatef(initialx-sin(rotY),1,initialz-cos(rotY));
+
 	glColor3f(1.0,0.23,0.27);
+
 	glScalef(0.6,0.6,0.6);
+
 	glRotatef(rotY, 0.0f, 1.0f, 0.0f);
+
 	// glCallList(ObjList);
+
 	glRotatef(rotY, 0.0f, -1.0f, 0.0f);
+
 	// glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+
 	
+
 	// glTranslatef(-(initialx-sin(rotY)),0,-(initialz-cos(rotY)));
 
+
+
 	glPopMatrix();
+
 	/*
+
 	* Trying to do some HUD here
+
 	*/
+
 	glMatrixMode(GL_PROJECTION);
+
 	glPushMatrix();
+
 	glLoadIdentity();
+
 	glOrtho(0.0, win.width, win.height, 0.0, -1.0, 10.0);
+
 	glMatrixMode(GL_MODELVIEW);
+
 	glLoadIdentity();
+
 	glDisable(GL_DEPTH_TEST);
 
+
+
 	glClear(GL_DEPTH_BUFFER_BIT);
+
+
 
 	glBegin(GL_QUADS);
+
 		glColor3f(1.0f, 1.0f, 0.0f);
+
 		glVertex2f(0.0, 0.0);
+
 		glVertex2f(win.width, 0.0);
+
 		glVertex2f(win.width, 100.0);
+
 		glVertex2f(0.0, 100.0);
+
 	glEnd();
 
-	/*
-	*	Building the Speedometer
-	*/
-	glTranslatef(win.width/4, win.height-100, 0.0f);
-	glRotatef(60*sqrt(speed*speed) + 50, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_TRIANGLES);
-		glColor3f(1.0f, 0.0f, 0.0f);
-		glVertex2f(2.0f, 0.0f);
-		glVertex2f(0.0f,100.0f);
-		glVertex2f(-2.0f,0.0f);
-		// glVertex2f(0.0f, -100.0f);
-	glEnd();
-	char Speed_Display[30];
+
+
 	int lenghOfQuote;
-	glRotatef(-60*sqrt(speed*speed) - 50, 0.0f, 0.0f, 1.0f);
+
+	if (space_pressed_to_start_race){
+
 		/*
-		And Printing that speed as well
+
+		*	Building the Speedometer
+
 		*/
-		glScalef(0.2, 0.2, 0.2);
-		glRotatef(180, -1.0, 0.0, 0.0);
-		glTranslatef(-350.0f,-200.0f, 0.0f);
-		sprintf(Speed_Display, "%.0f km/h", -50*speed);
-    	lenghOfQuote = (int)strlen(Speed_Display);
-		for (int i = 0; i < lenghOfQuote; i++)
-		{
-		  	glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
-		    // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
-		    glutStrokeCharacter(GLUT_STROKE_ROMAN, Speed_Display[i]);
-		}
-		glTranslatef(350.0f, 200.0f, 0.0f);
-		glScalef(5, 5, 5);
-		glRotatef(180, 1.0, 0.0, 0.0);
-	glTranslatef(-1*win.width/4, -1*(win.height-100), 0.0f);
-	/*
-	*	Building the Steering Wheel
-	*/
-	glTranslatef(win.width/2, win.height+100, 0.0f);
-	glRotatef(2*turn, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_TRIANGLE_STRIP);
-		for (int ii = 0.6; ii < 7; ii += 1.0)
-		{
-			glColor3f((ii%2), 0.0f, 0.0f);
-			glVertex2f(sin(ii)*300, cos(ii)*300);
-		}
-		// glVertex2f(0.0f, -100.0f);
-	glEnd();
-	glRotatef(-2*turn, 0.0f, 0.0f, 1.0f);
-	glTranslatef(-1*win.width/2, -1*(win.height+100), 0.0f);
-	/*
-	* Trying to write some stuff inside the HUD created.
-	*/
-	// char* myCharString = "Yo babes";
-	// glutStrokeCharacter(GLUT_STROKE_ROMAN, 1/*myCharString*/);
-	char quote[3][80];
-	glScalef(0.4, 0.4, 0.5);
-	glTranslatef(0.0f,150.0f, 0.0f);
-	glRotatef(180, 1.0, 0.0, 0.0);
-	if (space_pressed_to_start_race)
-	{
-		userTime = clock()-startTime;
-		sprintf(quote[0], "Time: %0.2f", (float)(userTime)/CLOCKS_PER_SEC);
-	
-    	lenghOfQuote = (int)strlen(quote[0]);
-    	glPushMatrix();
-	    // glTranslatef(-(lenghOfQuote*37), -(l*200), 0.0);
-	    for (int i = 0; i < lenghOfQuote; i++)
-	    {
-	    	glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
-	        // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
-	        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[0][i]);
-	    }
-	    glPopMatrix();
-    }
-	else {
-		sprintf(quote[0], "Press Space to start Race");
-		sprintf(quote[1], "Press ' c ' to change car");
-		sprintf(quote[2], "Press ' t ' to change track");
-		for (int jj = 0; jj < 3; ++jj)
-	    {
-	    	lenghOfQuote = (int)strlen(quote[jj]);
-		    for (int i = 0; i < lenghOfQuote; i++)
-		    {
-		    	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
-		    }
-		    glTranslatef(-70*(lenghOfQuote), -200, 0.0);
-		}
+
+		glTranslatef(win.width/4, win.height-100, 0.0f);
+
+		glRotatef(60*sqrt(speed*speed) + 50, 0.0f, 0.0f, 1.0f);
+
+		glBegin(GL_TRIANGLES);
+
+			glColor3f(1.0f, 0.0f, 0.0f);
+
+			glVertex2f(2.0f, 0.0f);
+
+			glVertex2f(0.0f,100.0f);
+
+			glVertex2f(-2.0f,0.0f);
+
+			// glVertex2f(0.0f, -100.0f);
+
+		glEnd();
+
+		char Speed_Display[30];
+
+		glRotatef(-60*sqrt(speed*speed) - 50, 0.0f, 0.0f, 1.0f);
+
+			/*
+
+			And Printing that speed as well
+
+			*/
+
+			glScalef(0.2, 0.2, 0.2);
+
+			glRotatef(180, -1.0, 0.0, 0.0);
+
+			glTranslatef(-350.0f,-200.0f, 0.0f);
+
+			sprintf(Speed_Display, "%.0f km/h", -50*speed);
+
+	    	lenghOfQuote = (int)strlen(Speed_Display);
+
+			for (int i = 0; i < lenghOfQuote; i++)
+
+			{
+
+			  	glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
+
+			    // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
+
+			    glutStrokeCharacter(GLUT_STROKE_ROMAN, Speed_Display[i]);
+
+			}
+
+			glTranslatef(350.0f, 200.0f, 0.0f);
+
+			glScalef(5, 5, 5);
+
+			glRotatef(180, 1.0, 0.0, 0.0);
+
+		glTranslatef(-1*win.width/4, -1*(win.height-100), 0.0f);
+
+		/*
+
+		*	Building the Steering Wheel
+
+		*/
+
+		glTranslatef(win.width/2, win.height+100, 0.0f);
+
+		glRotatef(2*turn, 0.0f, 0.0f, 1.0f);
+
+		glBegin(GL_TRIANGLE_STRIP);
+
+			for (int ii = 0.6; ii < 7; ii += 1.0)
+
+			{
+
+				glColor3f((ii%2), 0.0f, 0.0f);
+
+				glVertex2f(sin(ii)*300, cos(ii)*300);
+
+			}
+
+			// glVertex2f(0.0f, -100.0f);
+
+		glEnd();
+
+		glRotatef(-2*turn, 0.0f, 0.0f, 1.0f);
+
+		glTranslatef(-1*win.width/2, -1*(win.height+100), 0.0f);
+
 	}
+
+	/*
+
+	* Trying to write some stuff inside the HUD created.
+
+	*/
+
+	// char* myCharString = "Yo babes";
+
+	// glutStrokeCharacter(GLUT_STROKE_ROMAN, 1/*myCharString*/);
+
+	char quote[3][80];
+
+	glScalef(0.4, 0.4, 0.5);
+
+	glTranslatef(0.0f,150.0f, 0.0f);
+
+	glRotatef(180, 1.0, 0.0, 0.0);
+
+	if (space_pressed_to_start_race)
+
+	{
+
+		userTime = clock()-startTime;
+
+		sprintf(quote[0], "Time: %0.2f", (float)(userTime)/CLOCKS_PER_SEC);
+
+	
+
+    	lenghOfQuote = (int)strlen(quote[0]);
+
+    	glPushMatrix();
+
+	    // glTranslatef(-(lenghOfQuote*37), -(l*200), 0.0);
+
+	    for (int i = 0; i < lenghOfQuote; i++)
+
+	    {
+
+	    	glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
+
+	        // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
+
+	        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[0][i]);
+
+	    }
+
+	    glPopMatrix();
+
+    }
+
+	else {
+
+		sprintf(quote[0], "Press Space to start Race");
+
+		sprintf(quote[1], "Press ' c ' to change car");
+
+		sprintf(quote[2], "Press ' t ' to change track");
+
+		for (int jj = 0; jj < 3; ++jj)
+
+	    {
+
+	    	lenghOfQuote = (int)strlen(quote[jj]);
+
+		    for (int i = 0; i < lenghOfQuote; i++)
+
+		    {
+
+		    	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+
+		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
+
+		    }
+
+		    glTranslatef(-70*(lenghOfQuote), -200, 0.0);
+
+		}
+
+	}
+
+
 
 	//Make sure we can render in 3d again
+
 	glMatrixMode(GL_PROJECTION);
+
 	glPopMatrix();
+
 	glMatrixMode(GL_MODELVIEW);
+
 	if (frame_type == PAUSE_SCREEN)
+
 	{
+
 		return;
+
 	}
+
 	glutSwapBuffers();
+
 }
 
 
+
+
+
 /*
+
 *	The Display when the game starts
+
 */
+
 void startDisplay()
+
 {
+
 	char quote[4][80];
+
 	int lenghOfQuote;
+
 	glClear(GL_COLOR_BUFFER_BIT);					//Clear the colour buffer (more buffers later on)
+
 	glLoadIdentity();
+
 	glTranslatef(0.0f, 0.0f, -10.0f);
 
+
+
 	// glPushMatrix();
+
 		// glColor3f(0.3f, 0.4f, 0.0f);
+
 		// glBegin(GL_TRIANGLES);
+
 		// 	glVertex3f(0.0f, 1.0f, 0.0f);
+
 		// 	glVertex3f(1.0f, 0.0f, 0.0f);
+
 		// 	glVertex3f(0.0f, 0.0f, 1.0f);
+
 		// glEnd();
+
 	// glPopMatrix();
+
 /*
+
 * Trying to do some HUD here
+
 */
+
 	glMatrixMode(GL_PROJECTION);
+
 	glPushMatrix();
+
 	glLoadIdentity();
+
 	glOrtho(0.0, win.width, win.height, 0.0, -1.0, 10.0);
+
 	glMatrixMode(GL_MODELVIEW);
+
 	glLoadIdentity();
+
 	glDisable(GL_DEPTH_TEST);
+
+
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
+
+
 	if (frame_type == SELECTION_SCREEN)
+
 	{
+
 		glPointSize(12.0f);
+
 		glBegin(GL_POINTS);
+
 			glColor3f(0.0f, 0.0f, 0.0f);
+
 			glVertex2f(win.width/2 - 150 - 30, 190+selector);
+
 			glVertex2f(win.width/2 + 150 - 30, 190+selector);
+
 			// glVertex2f(win.width/2 + 50, 100/*-150+selector*200*/);
+
 		glEnd();
+
 		// glBegin(GL_QUADS);
+
 		// 	glColor3f(1.0f, 1.0f, 0.0f);
+
 		// 	glVertex2f(0.0, 0.0);
+
 		// 	glVertex2f(win.width, 0.0);
+
 		// 	glVertex2f(win.width, win.height);
+
 		// 	glVertex2f(0.0, win.height);
+
+		// glEnd();
+
+
+
+		/*
+
+		* Trying to write some stuff inside the HUD created.
+
+		*/
+
+		// glutStrokeCharacter(GLUT_STROKE_ROMAN, 1/*myCharString*/);
+
+		glTranslatef(win.width/2 + 82,150.0f, 0.0f);
+
+		glScalef(0.28, 0.25, 1.0);
+
+		glRotatef(180, 1.0, 0.0, 0.0);
+
+		sprintf(quote[0], "Start Game");
+
+		sprintf(quote[1], "Game Level");
+
+		sprintf(quote[2], "Settings");
+
+		sprintf(quote[3], "Exit");
+
+	    glPushMatrix();
+
+	    glPointSize(3.0f);
+
+	    for (int jj = 0; jj < 4; ++jj)
+
+	    {
+
+	    	lenghOfQuote = (int)strlen(quote[jj]);
+
+	    	glTranslatef(-(lenghOfQuote*77), -200, 0.0);
+
+		    for (int i = 0; i < lenghOfQuote; i++)
+
+		    {
+
+		    	glColor4f(0.0f, 0.1f, 0.2f, 1.0f);
+
+		        // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
+
+		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
+
+		    }
+
+		}
+
+	    glPopMatrix();
+
+	}
+
+	else if (frame_type == PAUSE_SCREEN)
+
+	{
+
+		glPointSize(12.0f);
+
+		glBegin(GL_POINTS);
+
+			glColor3f(0.0f, 0.0f, 0.0f);
+
+			glVertex2f(win.width/2 - 150 - 30, 190+selector);
+
+			glVertex2f(win.width/2 + 150 - 30, 190+selector);
+
+		glEnd();
+
+		/*
+
+		*	Highlighting the currently chosen level
+
+		*/
+
+		// glBegin(GL_QUADS);
+
+		// 	glVertex2f();
+
 		// glEnd();
 
 		/*
+
 		* Trying to write some stuff inside the HUD created.
+
 		*/
-		// glutStrokeCharacter(GLUT_STROKE_ROMAN, 1/*myCharString*/);
+
 		glTranslatef(win.width/2 + 82,150.0f, 0.0f);
+
 		glScalef(0.28, 0.25, 1.0);
+
 		glRotatef(180, 1.0, 0.0, 0.0);
-		sprintf(quote[0], "Start Game");
-		sprintf(quote[1], "Game Level");
-		sprintf(quote[2], "Settings");
-		sprintf(quote[3], "Exit");
-	    glPushMatrix();
-	    glPointSize(3.0f);
-	    for (int jj = 0; jj < 4; ++jj)
-	    {
-	    	lenghOfQuote = (int)strlen(quote[jj]);
-	    	glTranslatef(-(lenghOfQuote*77), -200, 0.0);
-		    for (int i = 0; i < lenghOfQuote; i++)
-		    {
-		    	glColor4f(0.0f, 0.1f, 0.2f, 1.0f);
-		        // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
-		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
-		    }
-		}
-	    glPopMatrix();
-	}
-	else if (frame_type == PAUSE_SCREEN)
-	{
-		glPointSize(12.0f);
-		glBegin(GL_POINTS);
-			glColor3f(0.0f, 0.0f, 0.0f);
-			glVertex2f(win.width/2 - 150 - 30, 190+selector);
-			glVertex2f(win.width/2 + 150 - 30, 190+selector);
-		glEnd();
-		/*
-		*	Highlighting the currently chosen level
-		*/
-		// glBegin(GL_QUADS);
-		// 	glVertex2f();
-		// glEnd();
-		/*
-		* Trying to write some stuff inside the HUD created.
-		*/
-		glTranslatef(win.width/2 + 82,150.0f, 0.0f);
-		glScalef(0.28, 0.25, 1.0);
-		glRotatef(180, 1.0, 0.0, 0.0);
+
 		sprintf(quote[0], "Resume Game");
+
 		sprintf(quote[1], "Settings ");
+
 		sprintf(quote[2], "Main Menu");
+
 	    glPushMatrix();
+
 	    glPointSize(3.0f);
+
 	    for (int jj = 0; jj < 3; ++jj)
+
 	    {
+
 	    	lenghOfQuote = (int)strlen(quote[jj]);
+
 	    	glTranslatef(-(lenghOfQuote*77), -200, 0.0);
+
 		    for (int i = 0; i < lenghOfQuote; i++)
+
 		    {
+
 		    	glColor4f(0.0f, 0.0f, 0.0f, 0.2f);
+
 		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
+
 		    }
+
 		}
+
 	    glPopMatrix();
+
 	}
+
 	else if (frame_type == LEVEL_CHANGE_SCREEN)
+
 	{
+
 		glPointSize(12.0f);
+
 		glBegin(GL_POINTS);
+
 			glColor3f(0.0f, 0.0f, 0.0f);
+
 			glVertex2f(win.width/2 - 150 - 30, 190+selector);
+
 			glVertex2f(win.width/2 + 150 - 30, 190+selector);
+
 		glEnd();
+
 		/*
+
 		* Trying to write some stuff inside the HUD created.
+
 		*/
+
 		glTranslatef(win.width/2 + 90,150.0f, 0.0f);
+
 		glScalef(0.28, 0.25, 1.0);
+
 		glRotatef(180, 1.0, 0.0, 0.0);
+
 		sprintf(quote[0], "Learner Level");
+
 		sprintf(quote[1], "Decent-Driver");
+
 		sprintf(quote[2], "Professional");
+
 		sprintf(quote[3], "Back to Menu");
+
 	    glPushMatrix();
+
 	    glPointSize(3.0f);
+
 	    for (int jj = 0; jj < 4; ++jj)
+
 	    {
+
 	    	// if (jj == level)
+
 	    	// {
+
 	    	// 	strcat(quote[jj], "      current level");
+
 	    	// }
+
 	    	lenghOfQuote = (int)strlen(quote[jj]);
+
 	    	glTranslatef(-(lenghOfQuote*65), -200, 0.0);
+
 		    for (int i = 0; i < lenghOfQuote; i++)
+
 		    {
+
 		    	glColor4f(0.0f + 0.4*(jj == level), 0.0f + 0.4*(jj == level), 0.0f, 1.0f);
+
 		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
+
 		    }
+
 		}
+
 	    glPopMatrix();
+
 	}
+
+	else if (frame_type == SETTING_SCREEN)
+
+	{
+
+		glPointSize(12.0f);
+
+		glBegin(GL_POINTS);
+
+			glColor3f(0.0f, 0.0f, 0.0f);
+
+			glVertex2f(win.width/2 - 150 - 30, 190+selector);
+
+			glVertex2f(win.width/2 + 150 - 30, 190+selector);
+
+		glEnd();
+
+		/*
+
+		* Trying to write some stuff inside the HUD created.
+
+		*/
+
+		glTranslatef(win.width/2 - 230,150.0f, 0.0f);
+
+		glScalef(0.28, 0.25, 1.0);
+
+		glRotatef(180, 1.0, 0.0, 0.0);
+
+		sprintf(quote[0], "Game Music");
+
+		sprintf(quote[1], "Sound Effects");
+
+		sprintf(quote[2], "1st Person View");
+
+		sprintf(quote[3], "Back to Menu");
+
+	    glPushMatrix();
+
+	    glPointSize(3.0f);
+
+	    for (int jj = 0; jj < 3; ++jj)
+
+	    {
+
+	    	// if (jj == level)
+
+	    	// {
+
+	    	// 	strcat(quote[jj], "      current level");
+
+	    	// }
+
+	    	lenghOfQuote = (int)strlen(quote[jj]);
+
+	    	glTranslatef(-(lenghOfQuote*69), -200, 0.0);
+
+		    for (int i = 0; i < lenghOfQuote; i++)
+
+		    {
+
+		    	glColor4f(0.0f + (jj == 2), 0.0f + (jj == 2), 0.0f + (jj == 2), 1.0f);
+
+		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
+
+		    }
+
+		}
+
+		glTranslatef(200.0f, -200.0f, 0.0f);
+
+		for (int i = 0; i < lenghOfQuote; i++)
+
+		{
+
+			glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+
+		    glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[3][i]);
+
+		}
+
+		glTranslatef(520.0f, 800.0f, 0.0f);
+
+		if (music_on)
+
+		{
+
+			sprintf(quote[0], "<On>");
+
+		}
+
+		else {
+
+			sprintf(quote[0], "<Off>");
+
+		}
+
+		if (sound_effects_on)
+
+		{
+
+			sprintf(quote[1], "<On>");
+
+		}
+
+		else {
+
+			sprintf(quote[1], "<Off>");
+
+		}
+
+		if (third_person_view)
+
+		{
+
+			sprintf(quote[2], "<Off>");
+
+		} else {
+
+			sprintf(quote[2], "<On>");
+
+		}
+
+	    glPushMatrix();
+
+	    glPointSize(3.0f);
+
+	    for (int jj = 0; jj < 3; ++jj)
+
+	    {
+
+	    	// if (jj == level)
+
+	    	// {
+
+	    	// 	strcat(quote[jj], "      current level");
+
+	    	// }
+
+	    	lenghOfQuote = 5;									//Because all of them are <On> or <Off> .. so that they dont shake on change
+
+	    	glTranslatef(-(lenghOfQuote*65), -200, 0.0);
+
+		    for (int i = 0; i < lenghOfQuote; i++)
+
+		    {
+
+		    	glColor4f(0.0f + (jj == 2), 0.0f + (jj == 2), 0.0f + (jj == 2), 1.0f);
+
+		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
+
+		    }
+
+		}
+
+	    glPopMatrix();
+
+	}
+
 	//Make sure we can render in 3d again
+
 	glMatrixMode(GL_PROJECTION);
+
 	glPopMatrix();
+
 	glMatrixMode(GL_MODELVIEW);
 
+
+
 	if (frame_type == PLAYING_SCREEN)
+
 	{
+
 		display();
+
 	}
+
 	glutSwapBuffers();
+
 }
 
+
+
 void initialize () 
+
 {
+
     glMatrixMode(GL_PROJECTION);												// select projection matrix
+
     glViewport(0, 0, win.width, win.height);									// set the viewport
+
     glMatrixMode(GL_PROJECTION);												// set matrix mode
+
     glLoadIdentity();															// reset projection matrix
+
     GLfloat aspect = (GLfloat) win.width / win.height;
+
 	gluPerspective(win.field_of_view_angle, aspect, win.z_near, win.z_far);		// set up a perspective projection matrix
+
     glMatrixMode(GL_MODELVIEW);													// specify which matrix is the current matrix
+
     glShadeModel( GL_SMOOTH );
+
     glClearDepth( 1.0f );														// specify the clear value for the depth buffer
+
     glEnable( GL_DEPTH_TEST );
+
     glDepthFunc( GL_LEQUAL );
+
     glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );						// specify implementation-specific hints
+
 	glClearColor(0.4, 0.3, 0.5, 1.0);											// specify clear values for the color buffers								
+
 	loadTexture();
+
 	glEnable(GL_TEXTURE_2D);
+
 	glShadeModel(GL_FLAT);
 
 
+
+
+
 }
+
+
+
 
 
 void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )		
+
 { 
+
   switch ( key ) 
+
   {
+
     case KEY_ESCAPE:
+
     	if (frame_type == PLAYING_SCREEN)
+
     	{
+
     		frame_type = PAUSE_SCREEN;
+
     	}
+
     	else if (frame_type == PAUSE_SCREEN)
+
     	{
+
     		frame_type = PLAYING_SCREEN;
+
     	}
+
     	else if (frame_type = LEVEL_CHANGE_SCREEN)
+
     	{
+
     		frame_type = SELECTION_SCREEN;
+
     		selector = 0;
+
     	}
+
     	break;
+
     
+
     case 't':
+
     	if ((frame_type == PLAYING_SCREEN) && (!space_pressed_to_start_race))
+
     	{
+
 			currTrack.id ++;
+
 			currTrack.id = currTrack.id %4;
+
 			if (currTrack.id == 2)
+
 			{
+
 				currTrack.X_max_world = 100.0f;
+
 				currTrack.X_min_world =-100.0f;
+
 				currTrack.Z_max_world = 250.0f;
+
 				currTrack.Z_min_world = -100.0f;
+
 			}
+
 			if (currTrack.id == 3)
+
 			{
+
 				currTrack.X_min_world = -10.0f;
+
 				currTrack.X_max_world = 60.0f;
+
 				currTrack.Z_min_world = -200.0f;
+
 				currTrack.Z_max_world = 100.0f;
+
 			}
+
     		break;
+
     	}
+
+
 
     case SPACE:
+
     	if ((frame_type == PLAYING_SCREEN) && !(space_pressed_to_start_race))
+
     	{
+
 	    	if (currTrack.id == 2)
+
 	    	{
+
 	    		currTrack.friction = 0.01;
+
 	    		currTrack.start_x = -55.6982f;
+
 	    		currTrack.start_z = 146.3044f;
+
 	    		currTrack.X_max_world = 100.0f;
+
 	    		currTrack.X_min_world =-100.0f;
+
 	    		currTrack.Z_max_world = 250.0f;
+
 	    		currTrack.Z_min_world = -100.0f;
+
 	    	}
+
 	    	if (currTrack.id == 3)
+
 	    	{
+
 	    		currTrack.friction = 0.02;
+
 	    		currTrack.start_x = 14.8148f;
+
 	    		currTrack.start_z =  92.4015f;
+
 	    		currTrack.X_min_world = -10.0f;
+
 	    		currTrack.X_max_world = 60.0f;
+
 	    		currTrack.Z_min_world = -200.0f;
+
 	    		currTrack.Z_max_world = 100.0f;
+
 	    	}
+
 	    	initialx = currTrack.start_x;
+
 	    	initialz = currTrack.start_z;
+
 	    	rotY = 0;
+
 	    	speed = 0;
+
 	    	space_pressed_to_start_race = true;
+
 	    	startTime = clock();
+
 	    	break;
+
 	    }
 
+
+
     case ENTER:
+
     	if (frame_type == SELECTION_SCREEN)
+
     	{
+
     		if (selector == 0)
+
     		{
+
     			frame_type = PLAYING_SCREEN;
+
     		}
+
     		else if (selector == 50)
+
     		{
+
     			frame_type = LEVEL_CHANGE_SCREEN;
+
     			selector = 0;
+
     		}
+
+    		else if (selector == 100)
+
+    		{
+
+    			frame_type = SETTING_SCREEN;
+
+    			selector = 0;
+
+    		}
+
     		else if (selector == 150)
+
     		{
+
     			exit(0);
+
     		}
+
     	}
+
     	else if (frame_type == PAUSE_SCREEN)
+
     	{
+
     		if (selector == 0)
+
     		{
+
     			frame_type = PLAYING_SCREEN;
+
     		}
-    		else if (selector == 100)
-    		{
-    			frame_type = SELECTION_SCREEN;
-    			selector = 0;
-    			space_pressed_to_start_race = false;
-    		}
-    	}
-    	else if (frame_type == LEVEL_CHANGE_SCREEN)
-    	{
-    		if (selector == 150)
-    		{
-    			frame_type = SELECTION_SCREEN;
-    			selector = 0;
-    		}
-    		else if (selector == 0)
-    		{
-    			level = 0;
-    		}
+
     		else if (selector == 50)
+
     		{
-    			level =1;
+
+    			frame_type = SETTING_SCREEN;
+
+    			selector = 0;
+
     		}
+
     		else if (selector == 100)
+
     		{
-    			level = 2;
+
+    			frame_type = SELECTION_SCREEN;
+
+    			selector = 0;
+
+    			space_pressed_to_start_race = false;
+
     		}
+
     	}
+
+    	else if (frame_type == LEVEL_CHANGE_SCREEN)
+
+    	{
+
+    		if (selector == 150)
+
+    		{
+
+    			frame_type = SELECTION_SCREEN;
+
+    			selector = 0;
+
+    		}
+
+    		else if (selector == 0)
+
+    		{
+
+    			level = 0;
+
+    		}
+
+    		else if (selector == 50)
+
+    		{
+
+    			level =1;
+
+    		}
+
+    		else if (selector == 100)
+
+    		{
+
+    			level = 2;
+
+    		}
+
+    	}
+
+    	else if (frame_type == SETTING_SCREEN)
+
+    	{
+
+    		if (selector == 150)
+
+    		{
+
+    			frame_type = SELECTION_SCREEN;
+
+    			selector = 0;
+
+    		}
+
+    		else if (selector == 0)
+
+    		{
+
+    			music_on = !(music_on);
+
+    		}
+
+    		else if (selector == 50)
+
+    		{
+
+    			sound_effects_on = !sound_effects_on;
+
+    		}
+
+    		else if (selector == 100)
+
+    		{
+
+    			third_person_view = !third_person_view;
+
+    		}
+
+    	}
+
     default:
+
 	activeKey[key] = true;
+
       break;
+
   }
+
 }
+
+
 
 void keyUp (unsigned char key, int x, int y){
+
 	activeKey[key] = false;
+
 }
+
+
 
 //For Special Keys
+
 void SpecialKeyboard ( int key, int mousePositionX, int mousePositionY )		
+
 {
+
 	if (key == GLUT_KEY_UP)
+
 	{
+
 		key = 256;
+
 		if (frame_type == SELECTION_SCREEN)
+
 		{
+
 			selector -= 50;
+
 			if (selector == -50)
+
 			{
+
 				selector = 150;
+
 			}
+
 		}
+
 		else if (frame_type == PAUSE_SCREEN)
+
 		{
+
 			selector -= 50;
+
 			if (selector == -50)
+
 			{
+
 				selector = 100;
+
 			}
+
 		}
+
 		else if (frame_type == LEVEL_CHANGE_SCREEN)
+
 		{
+
 			selector -= 50;
+
 			if (selector == -50)
+
 			{
+
 				selector = 150;
+
 			}
+
 		}
+
+		else if (frame_type == SETTING_SCREEN)
+
+		{
+
+			selector -= 50;
+
+			if (selector == -50)
+
+			{
+
+				selector = 150;
+
+			}
+
+			if (selector == 100)
+
+			{
+
+				selector = 50;
+
+			}
+
+		}
+
 	}
+
 	else if (key == GLUT_KEY_DOWN)
+
 	{
+
 		key = 257;
+
 		if (frame_type == SELECTION_SCREEN)
+
 		{
+
 			selector += 50;
+
 			selector = selector%200;
+
 		}
+
 		else if (frame_type == PAUSE_SCREEN)
+
 		{
+
 			selector += 50;
+
 			selector = selector%150;
+
 		}
+
 		else if (frame_type == LEVEL_CHANGE_SCREEN)
+
 		{
+
 			selector += 50;
+
 			selector = selector%200;
+
 		}
+
+		else if (frame_type == SETTING_SCREEN)
+
+		{
+
+			selector += 50;
+
+			selector = selector%200;
+
+			if (selector == 100)
+
+			{
+
+				selector = 150;
+
+			}
+
+		}
+
 	}
+
 	else if (key == GLUT_KEY_LEFT)
+
 	{
+
 		key = 258;
+
 	}
+
 	else if (key == GLUT_KEY_RIGHT)
+
 	{
+
 		key = 259;
+
 	}
+
 	else {
+
 		return;
+
 	}
+
 	// activeKey[key] = true;
+
 }
 
+
+
 /*void SpecialKeyUp (int key, int x, int y){
+
 	if (key == GLUT_KEY_UP)
+
 	{
+
 		key = 256;
+
 	}
+
 	else if (key == GLUT_KEY_DOWN)
+
 	{
+
 		key = 257;
+
 	}
+
 	else if (key == GLUT_KEY_LEFT)
+
 	{
+
 		key = 258;
+
 	}
+
 	else if (key == GLUT_KEY_RIGHT)
+
 	{
+
 		key = 259;
+
 	}
+
 	else {
+
 		return;
+
 	}
+
 	activeKey[key] = false;
+
 }*/
 
+
+
 int main(int argc, char **argv) 
+
 {
+
 	// set window values
+
 	win.width = 1380;
+
 	win.height = 600;
+
 //	win.title = "TRACK";
+
 	win.field_of_view_angle = 45;
+
 	win.z_near = 1.0f;
+
 	win.z_far = 500.0f;
 
+
+
 	myCar.maxTurn = 65;
+
 	myCar.maxSpeed = 4.0;
+
 	myCar.acc = 0.02;
+
 	myCar.turnControl = 1.8;
+
 	myCar.objFileName = "media/avi.obj";
 
+
+
 	currTrack.id = 2;
+
 	level = 0;
+
 	frame_type = SELECTION_SCREEN;
 
+
+
 	// initialize and run program
+
 	glutInit(&argc, argv);                                      // GLUT initialization
+
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );  // Display Mode
+
 	glutInitWindowSize(win.width,win.height);					// set window size
+
 	glutCreateWindow("Car Simulator");									// create Window
+
 	glutDisplayFunc(startDisplay);									// register Display Function
+
 	glutIdleFunc( startDisplay );									// register Idle Function
+
 	glutKeyboardFunc( keyboard );
+
 	glutKeyboardUpFunc(keyUp);								// register Keyboard Handler
+
 	glutSpecialFunc( SpecialKeyboard );
+
 	// glutSpecialUpFunc(SpecialKeyUp);								// register Special Keyboard Handler
 
+
+
 	// loadObj(myCar.objFileName);								//replace porsche.obj with radar.obj or any other .obj to display it
+
 	initialize();
+
 	glutMainLoop();											// run GLUT mainloop
+
 	return 0;
 }
