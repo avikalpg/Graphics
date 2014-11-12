@@ -1,4 +1,0 @@
-/home/avikalpg/Documents/Graphics/assimp--3.0.1270-sdk/code/CMakeFiles/assimp.dir
-/home/avikalpg/Documents/Graphics/assimp--3.0.1270-sdk/tools/assimp_cmd/CMakeFiles/assimp_cmd.dir
-/home/avikalpg/Documents/Graphics/assimp--3.0.1270-sdk/CMakeFiles/uninstall.dir
-/home/avikalpg/Documents/Graphics/assimp--3.0.1270-sdk/contrib/zlib/CMakeFiles/zlib.dir

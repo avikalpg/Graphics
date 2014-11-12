@@ -19,6 +19,7 @@
 #define PAUSE_SCREEN		3
 #define LEVEL_CHANGE_SCREEN	4
 #define SETTING_SCREEN		5
+#define INSTRUCTION_SCREEN	6
 
 GLuint ObjList;
 
@@ -64,6 +65,7 @@ bool third_person_view = false;
 int frame_type;
 int selector;
 int level;					//level 0 => learner, 1=> Decent Driver, 2=> Professional
+int v;
 
 float speed=0;
 float turn=0;
@@ -384,11 +386,6 @@ void keyOperations() {
 	initialx += speed*sin(rotY);
 	initialz += speed*cos(rotY);
 }
-
-// void DrawEnclosingSphere(float radius, unsigned int rings, unsigned int sectors)
-// {
-
-// }
 
 /*
 *	The Display of the game play
@@ -742,6 +739,30 @@ void display()
 		 glVertex3f( 20.7482f, 0.0000f, -193.4343f);
 
 		 glEnd();
+
+		glColor3f(1.0, 1.0, 0.0);
+
+		glTranslatef(13.0, 4.0, 50.0);
+		if (v < 1)
+		{
+			glutSolidCube(3);
+		}
+		glTranslatef(14.0, 0.0, -65.0);
+		if (v < 2)
+		{
+			glutSolidCube(3);
+		}
+		glTranslatef(15.0, 0.0, -72.0);
+		if (v < 3)
+		{
+			glutSolidCube(3);
+		}		glTranslatef(-17.0, 0.0, 158.0);
+		if (v < 4)
+		{
+			glutSolidCube(3);
+		}
+		glTranslatef(-25.0, -4.0, 158.0);
+
 	}
 	else {
 		currTrack.id++;
@@ -865,6 +886,16 @@ void display()
 			glVertex2f(win.width, win.height - 100);
 			glVertex2f(win.width, win.height);
 			glVertex2f(0.0, win.height);
+
+			glVertex2f(0.0, 100);
+			glVertex2f(15, 100);
+			glVertex2f(35, win.height);
+			glVertex2f(0.0, win.height);
+
+			glVertex2f(win.width, 100);
+			glVertex2f(win.width - 15, 100);
+			glVertex2f(win.width - 35, win.height);
+			glVertex2f(win.width, win.height);
 		glEnd();
 		/*
 		*	The Space of Speedometer
@@ -1020,19 +1051,20 @@ void startDisplay()
 		* Trying to write some stuff inside the HUD created.
 		*/
 		// glutStrokeCharacter(GLUT_STROKE_ROMAN, 1/*myCharString*/);
-		glTranslatef(win.width/2 + 82,150.0f, 0.0f);
+		glTranslatef(win.width/2 + 85,150.0f, 0.0f);
 		glScalef(0.28, 0.25, 1.0);
 		glRotatef(180, 1.0, 0.0, 0.0);
 		sprintf(quote[0], "Start Game");
-		sprintf(quote[1], "Game Level");
-		sprintf(quote[2], "Settings");
-		sprintf(quote[3], "Exit");
+		sprintf(quote[1], " Game Level");
+		sprintf(quote[2], " Settings");
+		sprintf(quote[3], "How to play");
+		sprintf(quote[4], "Exit  ");
 	    glPushMatrix();
 	    glPointSize(3.0f);
-	    for (int jj = 0; jj < 4; ++jj)
+	    for (int jj = 0; jj < 5; ++jj)
 	    {
 	    	lenghOfQuote = (int)strlen(quote[jj]);
-	    	glTranslatef(-(lenghOfQuote*77), -200, 0.0);
+	    	glTranslatef(-(lenghOfQuote*(77 - 22*(jj==3))), -200, 0.0);
 		    for (int i = 0; i < lenghOfQuote; i++)
 		    {
 		    	glColor4f(0.0f, 0.1f, 0.2f, 1.0f);
@@ -1109,7 +1141,7 @@ void startDisplay()
 	    	glTranslatef(-(lenghOfQuote*65), -200, 0.0);
 		    for (int i = 0; i < lenghOfQuote; i++)
 		    {
-		    	glColor4f(0.0f + 0.4*(jj == level), 0.0f + 0.4*(jj == level), 0.0f, 1.0f);
+		    	glColor4f(0.0f + 0.8*(jj == level), 0.0f + 0.8*(jj == level), 0.0f, 1.0f);
 		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
 		    }
 		}
@@ -1194,6 +1226,43 @@ void startDisplay()
 		}
 	    glPopMatrix();
 	}
+	else if (frame_type == INSTRUCTION_SCREEN)
+	{
+		char option[14][80];
+		glPointSize(12.0f);
+		/*
+		* Trying to write some stuff inside the HUD created.
+		*/
+		glTranslatef(win.width/2 - 300,100.0f, 0.0f);
+		glScalef(0.2, 0.18, 1.0);
+		glRotatef(180, 1.0, 0.0, 0.0);
+		sprintf(option[0], "Controls:             ");
+		sprintf(option[1], "W : Accelerate forward");
+		sprintf(option[2], "S : Accelerate backward");
+		sprintf(option[3], "A : Turn Steering left");
+		sprintf(option[4], "D : Turn Steering right");
+		sprintf(option[5], "Instructions:          ");
+		sprintf(option[6], "On start game, press C to change car,");
+		sprintf(option[7], "and change track by pressing T.");
+		sprintf(option[8], "Then press SPACE to get rolling. ");
+		sprintf(option[9], "Collect all checkpoint items in");
+		sprintf(option[10], "sequential order to complete game in");
+		sprintf(option[11], "as less time as possible.");
+	    glPushMatrix();
+	    glPointSize(3.0f);
+	    for (int jj = 0; jj < 12; ++jj)
+	    {
+	    	lenghOfQuote = (int)strlen(option[jj]);
+	    	
+		    for (int i = 0; i < lenghOfQuote; i++)
+		    {
+		    	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+		        glutStrokeCharacter(GLUT_STROKE_ROMAN, option[jj][i]);
+		    }
+		    glTranslatef(-(lenghOfQuote*67), -200, 0.0);
+		}
+	    glPopMatrix();
+	}
 	//Make sure we can render in 3d again
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -1243,6 +1312,11 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
     		frame_type = PLAYING_SCREEN;
     	}
     	else if (frame_type = LEVEL_CHANGE_SCREEN)
+    	{
+    		frame_type = SELECTION_SCREEN;
+    		selector = 0;
+    	}
+    	else if (frame_type = INSTRUCTION_SCREEN)
     	{
     		frame_type = SELECTION_SCREEN;
     		selector = 0;
@@ -1342,6 +1416,7 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
 	    	rotY = 0;
 	    	speed = 0;
 	    	turn = 0;
+	    	v = 0;
 	    	space_pressed_to_start_race = true;
 	    	startTime = clock();
 	    	break;
@@ -1365,6 +1440,11 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
     			selector = 0;
     		}
     		else if (selector == 150)
+    		{
+    			frame_type = INSTRUCTION_SCREEN;
+    			selector = 0;
+    		}
+    		else if (selector == 200)
     		{
     			exit(0);
     		}
@@ -1448,7 +1528,7 @@ void SpecialKeyboard ( int key, int mousePositionX, int mousePositionY )
 			selector -= 50;
 			if (selector == -50)
 			{
-				selector = 150;
+				selector = 200;
 			}
 		}
 		else if (frame_type == PAUSE_SCREEN)
@@ -1486,7 +1566,7 @@ void SpecialKeyboard ( int key, int mousePositionX, int mousePositionY )
 		if (frame_type == SELECTION_SCREEN)
 		{
 			selector += 50;
-			selector = selector%200;
+			selector = selector%250;
 		}
 		else if (frame_type == PAUSE_SCREEN)
 		{
