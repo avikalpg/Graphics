@@ -18,6 +18,7 @@
 #define PLAYING_SCREEN		2
 #define PAUSE_SCREEN		3
 #define LEVEL_CHANGE_SCREEN	4
+#define SETTING_SCREEN		5
 
 GLuint ObjList;
 
@@ -33,6 +34,7 @@ typedef struct {
 glutWindow win;
 
 typedef struct{ 					//All these variables have to be changed for each car
+	int ID;
 	float maxTurn;
 	float maxSpeed;
 	float acc;
@@ -55,6 +57,9 @@ raceTrack currTrack;
 
 bool* activeKey = new bool[260];
 bool space_pressed_to_start_race = false;
+bool music_on = false;
+bool sound_effects_on = false;
+bool third_person_view = false;
 
 int frame_type;
 int selector;
@@ -215,7 +220,7 @@ void loadTexture(){
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); //scale linearly when image smalled than texture
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, image1->sizeX, image1->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, image1->data);
 
-	if (!ImageLoad("media/background02.bmp", image1)) {
+	if (!ImageLoad("media/Brick01.bmp", image1)) {
         exit(1);
     }
 	// if(image1 == NULL){
@@ -366,15 +371,15 @@ void keyOperations() {
 		speed =0;
 		initialz = currTrack.Z_min_world;
 	}
-	if (initialx > currTrack.X_max_world)
+	if (initialx > currTrack.X_max_world + 5.0)
 	{
 		speed = 0;
-		initialx = currTrack.X_max_world;
+		initialx = currTrack.X_max_world + 5.0;
 	}
-	else if (initialx < currTrack.X_min_world)
+	else if (initialx < currTrack.X_min_world + 5.0)
 	{
 		speed =0;
-		initialx = currTrack.X_min_world;
+		initialx = currTrack.X_min_world + 5.0;
 	}
 	initialx += speed*sin(rotY);
 	initialz += speed*cos(rotY);
@@ -390,6 +395,8 @@ void keyOperations() {
 */
 void display() 
 {
+	int lenghOfQuote;
+	char quote[4][80];
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		     // Clear Screen and Depth Buffer
 	glLoadIdentity();
 	glTranslatef(0.0f,0.0f,-10.0f);			
@@ -455,7 +462,7 @@ void display()
 		glEnd();
 
 		glColor3f(1.0f, 1.0f, 1.0f);
-		// glBindTexture(GL_TEXTURE_2D, texture[3]);
+		glBindTexture(GL_TEXTURE_2D, texture[3]);
 		// DrawEnclosingSphere(300, 10, 10);
 		glBegin(GL_QUADS);
 		for (int i = currTrack.X_min_world; i < currTrack.X_max_world; i+=25.0f)
@@ -767,6 +774,7 @@ void display()
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
+	// The top quad -- header
 	glBegin(GL_QUADS);
 		glColor3f(1.0f, 1.0f, 0.0f);
 		glVertex2f(0.0, 0.0);
@@ -775,60 +783,147 @@ void display()
 		glVertex2f(0.0, 100.0);
 	glEnd();
 
-	/*
-	*	Building the Speedometer
-	*/
-	glTranslatef(win.width/4, win.height-100, 0.0f);
-	glRotatef(60*sqrt(speed*speed) + 50, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_TRIANGLES);
-		glColor3f(1.0f, 0.0f, 0.0f);
-		glVertex2f(2.0f, 0.0f);
-		glVertex2f(0.0f,100.0f);
-		glVertex2f(-2.0f,0.0f);
-		// glVertex2f(0.0f, -100.0f);
-	glEnd();
-	char Speed_Display[30];
-	int lenghOfQuote;
-	glRotatef(-60*sqrt(speed*speed) - 50, 0.0f, 0.0f, 1.0f);
-		/*
-		And Printing that speed as well
-		*/
-		glScalef(0.2, 0.2, 0.2);
-		glRotatef(180, -1.0, 0.0, 0.0);
-		glTranslatef(-350.0f,-200.0f, 0.0f);
-		sprintf(Speed_Display, "%.0f km/h", -50*speed);
-    	lenghOfQuote = (int)strlen(Speed_Display);
-		for (int i = 0; i < lenghOfQuote; i++)
+	//Car stats on the car switching page
+	if (!space_pressed_to_start_race){
+		int bar_length;
+		glBegin(GL_QUADS);
+			glColor3f(0.0f, 0.0f, 0.0f);
+			glVertex2f(win.width - 600.0, 150.0);
+			glVertex2f(win.width -  30.0, 150.0);
+			glVertex2f(win.width -  30.0, 360.0);
+			glVertex2f(win.width - 600.0, 360.0);
+		glEnd();
+		for (int attr = 0; attr < 4; ++attr)
 		{
-		  	glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
-		    // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
-		    glutStrokeCharacter(GLUT_STROKE_ROMAN, Speed_Display[i]);
+			if (attr == 0)
+			{
+				bar_length = myCar.maxSpeed * 60;
+			}
+			else if (attr == 1)
+			{
+				bar_length = myCar.acc * 3000;
+			}
+			else if (attr == 2)
+			{
+				bar_length = myCar.turnControl * 120;
+			}
+			else if (attr == 3)
+			{
+				bar_length = myCar.maxTurn*3;
+			}
+			glBegin(GL_QUADS);
+				glColor3f(0.4f, 0.4f, 0.4f);
+				glVertex2f(win.width - 360.0, 180.0 + attr*40);
+				glVertex2f(win.width -  50.0, 180.0 + attr*40);
+				glVertex2f(win.width -  50.0, 200.0 + attr*40);
+				glVertex2f(win.width - 360.0, 200.0 + attr*40);
+			glEnd();
+			glBegin(GL_QUADS);
+				glColor3f((attr==0) || (attr==3), (attr==2) || (attr==3), (attr == 1));
+				glVertex2f(win.width - 360.0, 180.0 + attr*40);
+				glVertex2f(win.width - 360.0 + bar_length, 180.0 + attr*40);
+				glVertex2f(win.width - 360.0 + bar_length, 200.0 + attr*40);
+				glVertex2f(win.width - 360.0, 200.0 + attr*40);
+			glEnd();
 		}
-		glTranslatef(350.0f, 200.0f, 0.0f);
-		glScalef(5, 5, 5);
+		glTranslatef(win.width/2 + 300.0f, 160.0, 0.0f);
+		glScalef(0.2, 0.2, 1.0);
 		glRotatef(180, 1.0, 0.0, 0.0);
-	glTranslatef(-1*win.width/4, -1*(win.height-100), 0.0f);
-	/*
-	*	Building the Steering Wheel
-	*/
-	glTranslatef(win.width/2, win.height+100, 0.0f);
-	glRotatef(2*turn, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_TRIANGLE_STRIP);
-		for (int ii = 0.6; ii < 7; ii += 1.0)
+		sprintf(quote[0], "Maximum Speed");
+		sprintf(quote[1], "Acceleration");
+		sprintf(quote[2], "Steer Control");
+		sprintf(quote[3], "Maximum Turn");
+		glPushMatrix();
+		glPointSize(3.0f);
+		for (int jj = 0; jj < 4; ++jj)
 		{
-			glColor3f((ii%2), 0.0f, 0.0f);
-			glVertex2f(sin(ii)*300, cos(ii)*300);
+			lenghOfQuote = (int)strlen(quote[jj]);
+			glTranslatef(-(lenghOfQuote*70), -200, 0.0);
+			for (int i = 0; i < lenghOfQuote; i++)
+			{
+				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+				glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
+			}
 		}
-		// glVertex2f(0.0f, -100.0f);
-	glEnd();
-	glRotatef(-2*turn, 0.0f, 0.0f, 1.0f);
-	glTranslatef(-1*win.width/2, -1*(win.height+100), 0.0f);
+		glRotatef(180, -1.0, 0.0, 0.0);
+		glScalef(5.0, 5.0, 1.0);
+		glTranslatef(-1*(win.width/2 + 290),-310.0f, 0.0f);
+	}
+
+	if (space_pressed_to_start_race){
+		glBegin(GL_QUADS);
+			glColor3f(0.3f, 0.3f, 0.3f);
+			glVertex2f(0.0, win.height - 100);
+			glVertex2f(win.width, win.height - 100);
+			glVertex2f(win.width, win.height);
+			glVertex2f(0.0, win.height);
+		glEnd();
+		glShadeModel(GL_SMOOTH);
+		glBegin(GL_POLYGON);
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			glVertex2f(200.0, win.height);
+			glColor4f(0.4f, 0.4f, 0.4f, 1.0f);
+			glVertex2f(200.0, win.height - 100);
+			glVertex2f(300.0, win.height - 150);
+			glVertex2f(400.0, win.height - 150);
+			glVertex2f(500.0, win.height - 100);
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			glVertex2f(500.0, win.height);
+		glEnd();
+		glShadeModel(GL_FLAT);
+		/*
+		*	Building the Speedometer
+		*/
+		glTranslatef(win.width/4, win.height-60, 0.0f);
+		glRotatef(60*sqrt(speed*speed) + 50, 0.0f, 0.0f, 1.0f);
+		glBegin(GL_TRIANGLES);
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glVertex2f(2.0f, 0.0f);
+			glVertex2f(0.0f,100.0f);
+			glVertex2f(-2.0f,0.0f);
+			// glVertex2f(0.0f, -100.0f);
+		glEnd();
+		char Speed_Display[30];
+		glRotatef(-60*sqrt(speed*speed) - 50, 0.0f, 0.0f, 1.0f);
+			/*
+			And Printing that speed as well
+			*/
+			glScalef(0.2, 0.2, 0.2);
+			glRotatef(180, -1.0, 0.0, 0.0);
+			glTranslatef(-350.0f,-200.0f, 0.0f);
+			sprintf(Speed_Display, "%.0f km/h", -50*speed);
+	    	lenghOfQuote = (int)strlen(Speed_Display);
+			for (int i = 0; i < lenghOfQuote; i++)
+			{
+			  	glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
+			    // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
+			    glutStrokeCharacter(GLUT_STROKE_ROMAN, Speed_Display[i]);
+			}
+			glTranslatef(350.0f, 200.0f, 0.0f);
+			glScalef(5, 5, 5);
+			glRotatef(180, 1.0, 0.0, 0.0);
+		glTranslatef(-1*win.width/4, -1*(win.height-60), 0.0f);
+		/*
+		*	Building the Steering Wheel
+		*/
+		glTranslatef(win.width/2, win.height+100, 0.0f);
+		glRotatef(2*turn, 0.0f, 0.0f, 1.0f);
+		glBegin(GL_TRIANGLE_STRIP);
+			for (int ii = 0.6; ii < 7; ii += 1.0)
+			{
+				glColor3f((ii%2), 0.0f, 0.0f);
+				glVertex2f(sin(ii)*300, cos(ii)*300);
+			}
+			// glVertex2f(0.0f, -100.0f);
+		glEnd();
+		glRotatef(-2*turn, 0.0f, 0.0f, 1.0f);
+		glTranslatef(-1*win.width/2, -1*(win.height+100), 0.0f);
+	}
 	/*
 	* Trying to write some stuff inside the HUD created.
 	*/
 	// char* myCharString = "Yo babes";
 	// glutStrokeCharacter(GLUT_STROKE_ROMAN, 1/*myCharString*/);
-	char quote[3][80];
 	glScalef(0.4, 0.4, 0.5);
 	glTranslatef(0.0f,150.0f, 0.0f);
 	glRotatef(180, 1.0, 0.0, 0.0);
@@ -1024,6 +1119,85 @@ void startDisplay()
 		}
 	    glPopMatrix();
 	}
+	else if (frame_type == SETTING_SCREEN)
+	{
+		glPointSize(12.0f);
+		glBegin(GL_POINTS);
+			glColor3f(0.0f, 0.0f, 0.0f);
+			glVertex2f(win.width/2 - 150 - 30, 190+selector);
+			glVertex2f(win.width/2 + 150 - 30, 190+selector);
+		glEnd();
+		/*
+		* Trying to write some stuff inside the HUD created.
+		*/
+		glTranslatef(win.width/2 - 230,150.0f, 0.0f);
+		glScalef(0.28, 0.25, 1.0);
+		glRotatef(180, 1.0, 0.0, 0.0);
+		sprintf(quote[0], "Game Music");
+		sprintf(quote[1], "Sound Effects");
+		sprintf(quote[2], "1st Person View");
+		sprintf(quote[3], "Back to Menu");
+	    glPushMatrix();
+	    glPointSize(3.0f);
+	    for (int jj = 0; jj < 3; ++jj)
+	    {
+	    	// if (jj == level)
+	    	// {
+	    	// 	strcat(quote[jj], "      current level");
+	    	// }
+	    	lenghOfQuote = (int)strlen(quote[jj]);
+	    	glTranslatef(-(lenghOfQuote*69), -200, 0.0);
+		    for (int i = 0; i < lenghOfQuote; i++)
+		    {
+		    	glColor4f(0.0f + (jj == 2), 0.0f + (jj == 2), 0.0f + (jj == 2), 1.0f);
+		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
+		    }
+		}
+		glTranslatef(200.0f, -200.0f, 0.0f);
+		for (int i = 0; i < lenghOfQuote; i++)
+		{
+			glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+		    glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[3][i]);
+		}
+		glTranslatef(520.0f, 800.0f, 0.0f);
+		if (music_on)
+		{
+			sprintf(quote[0], "<On>");
+		}
+		else {
+			sprintf(quote[0], "<Off>");
+		}
+		if (sound_effects_on)
+		{
+			sprintf(quote[1], "<On>");
+		}
+		else {
+			sprintf(quote[1], "<Off>");
+		}
+		if (third_person_view)
+		{
+			sprintf(quote[2], "<Off>");
+		} else {
+			sprintf(quote[2], "<On>");
+		}
+	    glPushMatrix();
+	    glPointSize(3.0f);
+	    for (int jj = 0; jj < 3; ++jj)
+	    {
+	    	// if (jj == level)
+	    	// {
+	    	// 	strcat(quote[jj], "      current level");
+	    	// }
+	    	lenghOfQuote = 5;									//Because all of them are <On> or <Off> .. so that they dont shake on change
+	    	glTranslatef(-(lenghOfQuote*65), -200, 0.0);
+		    for (int i = 0; i < lenghOfQuote; i++)
+		    {
+		    	glColor4f(0.0f + (jj == 2), 0.0f + (jj == 2), 0.0f + (jj == 2), 1.0f);
+		        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[jj][i]);
+		    }
+		}
+	    glPopMatrix();
+	}
 	//Make sure we can render in 3d again
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -1101,6 +1275,49 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
     		break;
     	}
 
+    case 'c':
+    	if ((frame_type == PLAYING_SCREEN) && (!space_pressed_to_start_race))
+    	{
+			myCar.ID ++;
+			if (myCar.ID == 4)
+			{
+				myCar.ID = 0;
+			}
+			if (myCar.ID == 0)
+			{
+				myCar.maxTurn = 65;
+				myCar.maxSpeed = 4.0;
+				myCar.acc = 0.02;
+				myCar.turnControl = 1.8;
+				myCar.objFileName = "media/avi.obj";
+			}
+			else if (myCar.ID == 1)
+			{
+				myCar.maxTurn = 80;
+				myCar.maxSpeed = 3.0;
+				myCar.acc = 0.019;
+				myCar.turnControl = 2.0;
+				myCar.objFileName = "media/car.obj";
+			}
+			else if (myCar.ID == 2)
+			{
+				myCar.maxTurn = 40;
+				myCar.maxSpeed = 5.0;
+				myCar.acc = 0.05;
+				myCar.turnControl = 1.7;
+				myCar.objFileName = "media/my.obj";
+			}
+			else if (myCar.ID == 3)
+			{
+				myCar.maxTurn = 90;
+				myCar.maxSpeed = 0.8;
+				myCar.acc = 0.1;
+				myCar.turnControl = 2.5;
+				myCar.objFileName = "media/box.obj";
+			}
+    		break;
+    	}
+
     case SPACE:
     	if ((frame_type == PLAYING_SCREEN) && !(space_pressed_to_start_race))
     	{
@@ -1120,7 +1337,7 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
 	    		currTrack.start_x = 14.8148f;
 	    		currTrack.start_z =  92.4015f;
 	    		currTrack.X_min_world = -10.0f;
-	    		currTrack.X_max_world = 60.0f;
+	    		currTrack.X_max_world = 80.0f;
 	    		currTrack.Z_min_world = -200.0f;
 	    		currTrack.Z_max_world = 100.0f;
 	    	}
@@ -1128,6 +1345,7 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
 	    	initialz = currTrack.start_z;
 	    	rotY = 0;
 	    	speed = 0;
+	    	turn = 0;
 	    	space_pressed_to_start_race = true;
 	    	startTime = clock();
 	    	break;
@@ -1145,6 +1363,11 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
     			frame_type = LEVEL_CHANGE_SCREEN;
     			selector = 0;
     		}
+    		else if (selector == 100)
+    		{
+    			frame_type = SETTING_SCREEN;
+    			selector = 0;
+    		}
     		else if (selector == 150)
     		{
     			exit(0);
@@ -1155,6 +1378,11 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
     		if (selector == 0)
     		{
     			frame_type = PLAYING_SCREEN;
+    		}
+    		else if (selector == 50)
+    		{
+    			frame_type = SETTING_SCREEN;
+    			selector = 0;
     		}
     		else if (selector == 100)
     		{
@@ -1181,6 +1409,26 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
     		else if (selector == 100)
     		{
     			level = 2;
+    		}
+    	}
+    	else if (frame_type == SETTING_SCREEN)
+    	{
+    		if (selector == 150)
+    		{
+    			frame_type = SELECTION_SCREEN;
+    			selector = 0;
+    		}
+    		else if (selector == 0)
+    		{
+    			music_on = !(music_on);
+    		}
+    		else if (selector == 50)
+    		{
+    			sound_effects_on = !sound_effects_on;
+    		}
+    		else if (selector == 100)
+    		{
+    			third_person_view = !third_person_view;
     		}
     	}
     default:
@@ -1223,6 +1471,18 @@ void SpecialKeyboard ( int key, int mousePositionX, int mousePositionY )
 				selector = 150;
 			}
 		}
+		else if (frame_type == SETTING_SCREEN)
+		{
+			selector -= 50;
+			if (selector == -50)
+			{
+				selector = 150;
+			}
+			if (selector == 100)
+			{
+				selector = 50;
+			}
+		}
 	}
 	else if (key == GLUT_KEY_DOWN)
 	{
@@ -1241,6 +1501,15 @@ void SpecialKeyboard ( int key, int mousePositionX, int mousePositionY )
 		{
 			selector += 50;
 			selector = selector%200;
+		}
+		else if (frame_type == SETTING_SCREEN)
+		{
+			selector += 50;
+			selector = selector%200;
+			if (selector == 100)
+			{
+				selector = 150;
+			}
 		}
 	}
 	else if (key == GLUT_KEY_LEFT)
@@ -1285,7 +1554,6 @@ int main(int argc, char **argv)
 	// set window values
 	win.width = 1380;
 	win.height = 600;
-//	win.title = "TRACK";
 	win.field_of_view_angle = 45;
 	win.z_near = 1.0f;
 	win.z_far = 500.0f;
@@ -1296,6 +1564,7 @@ int main(int argc, char **argv)
 	myCar.turnControl = 1.8;
 	myCar.objFileName = "media/avi.obj";
 
+	myCar.ID = 0;
 	currTrack.id = 2;
 	level = 0;
 	frame_type = SELECTION_SCREEN;
