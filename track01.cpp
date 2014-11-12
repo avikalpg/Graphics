@@ -783,7 +783,9 @@ void display()
 		glVertex2f(0.0, 100.0);
 	glEnd();
 
-	//Car stats on the car switching page
+	/*
+	*	Car stats on the car switching page
+	*/
 	if (!space_pressed_to_start_race){
 		int bar_length;
 		glBegin(GL_QUADS);
@@ -826,6 +828,9 @@ void display()
 				glVertex2f(win.width - 360.0, 200.0 + attr*40);
 			glEnd();
 		}
+		/*
+		*	Writing in the stats name in box
+		*/
 		glTranslatef(win.width/2 + 300.0f, 160.0, 0.0f);
 		glScalef(0.2, 0.2, 1.0);
 		glRotatef(180, 1.0, 0.0, 0.0);
@@ -851,6 +856,9 @@ void display()
 	}
 
 	if (space_pressed_to_start_race){
+		/*
+		*	Bottom Panel
+		*/
 		glBegin(GL_QUADS);
 			glColor3f(0.3f, 0.3f, 0.3f);
 			glVertex2f(0.0, win.height - 100);
@@ -858,6 +866,9 @@ void display()
 			glVertex2f(win.width, win.height);
 			glVertex2f(0.0, win.height);
 		glEnd();
+		/*
+		*	The Space of Speedometer
+		*/
 		glShadeModel(GL_SMOOTH);
 		glBegin(GL_POLYGON);
 			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -881,7 +892,6 @@ void display()
 			glVertex2f(2.0f, 0.0f);
 			glVertex2f(0.0f,100.0f);
 			glVertex2f(-2.0f,0.0f);
-			// glVertex2f(0.0f, -100.0f);
 		glEnd();
 		char Speed_Display[30];
 		glRotatef(-60*sqrt(speed*speed) - 50, 0.0f, 0.0f, 1.0f);
@@ -892,12 +902,11 @@ void display()
 			glRotatef(180, -1.0, 0.0, 0.0);
 			glTranslatef(-350.0f,-200.0f, 0.0f);
 			sprintf(Speed_Display, "%.0f km/h", -50*speed);
-	    	lenghOfQuote = (int)strlen(Speed_Display);
+			lenghOfQuote = (int)strlen(Speed_Display);
 			for (int i = 0; i < lenghOfQuote; i++)
 			{
-			  	glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
-			    // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
-			    glutStrokeCharacter(GLUT_STROKE_ROMAN, Speed_Display[i]);
+				glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
+				glutStrokeCharacter(GLUT_STROKE_ROMAN, Speed_Display[i]);
 			}
 			glTranslatef(350.0f, 200.0f, 0.0f);
 			glScalef(5, 5, 5);
@@ -914,7 +923,6 @@ void display()
 				glColor3f((ii%2), 0.0f, 0.0f);
 				glVertex2f(sin(ii)*300, cos(ii)*300);
 			}
-			// glVertex2f(0.0f, -100.0f);
 		glEnd();
 		glRotatef(-2*turn, 0.0f, 0.0f, 1.0f);
 		glTranslatef(-1*win.width/2, -1*(win.height+100), 0.0f);
@@ -922,8 +930,6 @@ void display()
 	/*
 	* Trying to write some stuff inside the HUD created.
 	*/
-	// char* myCharString = "Yo babes";
-	// glutStrokeCharacter(GLUT_STROKE_ROMAN, 1/*myCharString*/);
 	glScalef(0.4, 0.4, 0.5);
 	glTranslatef(0.0f,150.0f, 0.0f);
 	glRotatef(180, 1.0, 0.0, 0.0);
@@ -934,11 +940,9 @@ void display()
 	
     	lenghOfQuote = (int)strlen(quote[0]);
     	glPushMatrix();
-	    // glTranslatef(-(lenghOfQuote*37), -(l*200), 0.0);
 	    for (int i = 0; i < lenghOfQuote; i++)
 	    {
 	    	glColor4f(0.0f, 0.0f, 0.1f, 1.0f);
-	        // glColor3f((UpwardsScrollVelocity/10)+300+(l*10),(UpwardsScrollVelocity/10)+300+(l*10),0.0);
 	        glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[0][i]);
 	    }
 	    glPopMatrix();
@@ -982,17 +986,9 @@ void startDisplay()
 	glLoadIdentity();
 	glTranslatef(0.0f, 0.0f, -10.0f);
 
-	// glPushMatrix();
-		// glColor3f(0.3f, 0.4f, 0.0f);
-		// glBegin(GL_TRIANGLES);
-		// 	glVertex3f(0.0f, 1.0f, 0.0f);
-		// 	glVertex3f(1.0f, 0.0f, 0.0f);
-		// 	glVertex3f(0.0f, 0.0f, 1.0f);
-		// glEnd();
-	// glPopMatrix();
-/*
-* Trying to do some HUD here
-*/
+	/*
+	* Trying to do some HUD here
+	*/
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
@@ -1525,29 +1521,6 @@ void SpecialKeyboard ( int key, int mousePositionX, int mousePositionY )
 	}
 	// activeKey[key] = true;
 }
-
-/*void SpecialKeyUp (int key, int x, int y){
-	if (key == GLUT_KEY_UP)
-	{
-		key = 256;
-	}
-	else if (key == GLUT_KEY_DOWN)
-	{
-		key = 257;
-	}
-	else if (key == GLUT_KEY_LEFT)
-	{
-		key = 258;
-	}
-	else if (key == GLUT_KEY_RIGHT)
-	{
-		key = 259;
-	}
-	else {
-		return;
-	}
-	activeKey[key] = false;
-}*/
 
 int main(int argc, char **argv) 
 {
