@@ -697,7 +697,72 @@ void display()
 		glTexCoord2f(0.0, 1.0);
 		 glVertex3f( -69.6982f, 0.0000f, 146.3044f);
 
-		glEnd();
+		glEnd();glColor3f(1.0,1.0,0.0);
+		 
+		 glTranslatef(-58.0f,4.0f,72.0f);
+		 if (v<1){
+		glutSolidCube(3);
+		} 
+		glTranslatef(10.0f,0.0f,-106.0f);
+		if (v<2){
+		glutSolidCube(3);
+		} 
+		glTranslatef(42.5f,0.0f,-31.0f);
+		if (v<3){
+		glutSolidCube(3);
+		} 
+		glTranslatef(63.5f,0.0f,31.0f);
+		if (v<4){
+		glutSolidCube(3);
+		}
+		glTranslatef(10.0f,0.0f,107.0f);
+		if (v<5){
+		glutSolidCube(3);
+		}
+		glTranslatef(-23.0f,0.0f,120.0f);
+		if (v<6){
+		glutSolidCube(3);
+		}
+		glTranslatef(-39.0f,0.0f,15.0f);
+		if (v<7){
+		glutSolidCube(3);
+		}
+		glTranslatef(-54.0f,0.0f,-31.0f);
+		if (v<8){
+		glutSolidCube(3);
+		}
+		if (initialx > -70.0f && initialx < -45.0f && initialz > 70.0f && initialz < 75.0f && v==0)
+	{
+		v = 1;
+		}
+	if (initialx > -55.0f && initialx < -40.0f && initialz > -40.0f && initialz < -30.0f && v==1)
+	{
+		v = 2;
+		}
+	if (initialx > -10.0f && initialx < 0.0f && initialz > -65.0f && initialz < -55.0f && v==2)
+	{
+		v = 3;
+		}
+	if (initialx > 50.0f && initialx < 65.0f && initialz > -40.0f && initialz < -30.0f && v==3)
+	{
+		v = 4;
+		}
+	if (initialx > 55.0f && initialx < 80.0f && initialz > 70.0f && initialz < 75.0f && v==4)
+	{
+		v = 5;
+		}
+	if (initialx > 35.0f && initialx < 55.0f && initialz > 188.0f && initialz < 198.0f && v==5)
+	{
+		v = 6;
+		}
+	if (initialx > 0.0f && initialx < 10.0f && initialz > 198.0f && initialz < 218.0f && v==6)
+	{
+		v = 7;
+		}
+	if (initialx > -55.0f && initialx < -40.0f && initialz > 172.0f && initialz < 182.0f && v==7)
+	{
+		v = 8;
+		}
 	}
 	else if (currTrack.id == 3) {	
 		glBegin(GL_QUADS);
@@ -739,30 +804,43 @@ void display()
 		 glVertex3f( 20.7482f, 0.0000f, -193.4343f);
 
 		 glEnd();
-
-		glColor3f(1.0, 1.0, 0.0);
-
-		glTranslatef(13.0, 4.0, 50.0);
-		if (v < 1)
-		{
-			glutSolidCube(3);
+		 
+		 glColor3f(1.0,1.0,0.0);
+		 
+		 glTranslatef(13.0f,4.0f,50.0f);
+		 if (v<1){
+		glutSolidCube(3);
+		} 
+		glTranslatef(14.0f,0.0f,-65.0f);
+		if (v<2){
+		glutSolidCube(3);
+		} 
+		glTranslatef(15.0f,0.0f,-72.0f);
+		if (v<3){
+		glutSolidCube(3);
+		} 
+		glTranslatef(-17.0f,0.0f,-71.0);
+		if (v<4){
+		glutSolidCube(3);
 		}
-		glTranslatef(14.0, 0.0, -65.0);
-		if (v < 2)
-		{
-			glutSolidCube(3);
+		glTranslatef(-25.0f,-4.0f,158.0f);
+		
+		if (initialx > 0.0f && initialx < 24.0f && initialz > 49.0f && initialz < 51.0f && v==0)
+	{
+		v = 1;
 		}
-		glTranslatef(15.0, 0.0, -72.0);
-		if (v < 3)
-		{
-			glutSolidCube(3);
-		}		glTranslatef(-17.0, 0.0, 158.0);
-		if (v < 4)
-		{
-			glutSolidCube(3);
+	if (initialx > 16.0f && initialx < 38.0f && initialz > -16.0f && initialz < -14.0f && v==1)
+	{
+		v = 2;
 		}
-		glTranslatef(-25.0, -4.0, 158.0);
-
+	if (initialx > 31.0f && initialx < 53.0f && initialz > -88.0f && initialz < -86.0f && v==2)
+	{
+		v = 3;
+		}
+	if (initialx > 14.0f && initialx < 36.0f && initialz > -159.0f && initialz < -157.0f && v==3)
+	{
+		v = 4;
+		}
 	}
 	else {
 		currTrack.id++;
