@@ -81,6 +81,80 @@ time_t userTime;
 time_t startTime;
 time_t finalTime;
 
+/*
+*	The Sphere!!
+*/
+
+// #define DRAW_WIREFRAME 
+
+class SolidSphere
+{
+protected:
+    std::vector<GLfloat> vertices;
+    std::vector<GLfloat> normals;
+    std::vector<GLfloat> texcoords;
+    std::vector<GLushort> indices;
+
+public:
+    SolidSphere(float radius, unsigned int rings, unsigned int sectors)
+    {
+        float const R = 1./(float)(rings-1);
+        float const S = 1./(float)(sectors-1);
+        int r, s;
+
+        vertices.resize(rings * sectors * 3);
+        normals.resize(rings * sectors * 3);
+        texcoords.resize(rings * sectors * 2);
+        std::vector<GLfloat>::iterator v = vertices.begin();
+        std::vector<GLfloat>::iterator n = normals.begin();
+        std::vector<GLfloat>::iterator t = texcoords.begin();
+        for(r = 0; r < rings; r++) for(s = 0; s < sectors; s++) {
+                float const y = sin( -M_PI_2 + M_PI * r * R );
+                float const x = cos(2*M_PI * s * S) * sin( M_PI * r * R );
+                float const z = sin(2*M_PI * s * S) * sin( M_PI * r * R );
+
+                *t++ = s*S;
+                *t++ = r*R;
+
+                *v++ = x * radius;
+                *v++ = y * radius;
+                *v++ = z * radius;
+
+                *n++ = x;
+                *n++ = y;
+                *n++ = z;
+        }
+
+        indices.resize(rings * sectors * 4);
+        std::vector<GLushort>::iterator i = indices.begin();
+        for(r = 0; r < rings-1; r++) for(s = 0; s < sectors-1; s++) {
+                *i++ = r * sectors + s;
+                *i++ = r * sectors + (s+1);
+                *i++ = (r+1) * sectors + (s+1);
+                *i++ = (r+1) * sectors + s;
+        }
+    }
+
+    void draw(GLfloat x, GLfloat y, GLfloat z)
+    {
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glTranslatef(x,y,z);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+        glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
+        glNormalPointer(GL_FLOAT, 0, &normals[0]);
+        glTexCoordPointer(2, GL_FLOAT, 0, &texcoords[0]);
+        glDrawElements(GL_QUADS, indices.size(), GL_UNSIGNED_SHORT, &indices[0]);
+        glPopMatrix();
+    }
+};
+SolidSphere sphere(1, 12, 24);
+
+
 //Initializing variables for texturing
 GLuint texture[4];
 struct Image {
@@ -701,7 +775,10 @@ void display()
 		glTexCoord2f(0.0, 1.0);
 		 glVertex3f( -69.6982f, 0.0000f, 146.3044f);
 
-		glEnd();glColor3f(1.0,1.0,0.0);
+		glEnd();
+
+		// glEnable()
+		glColor3f(1.0,1.0,0.0);
 		 
 		 glTranslatef(-58.0f,4.0f,72.0f);
 		 if (v<1){
@@ -807,25 +884,50 @@ void display()
 		glTexCoord2f(1.0, 0.0);
 		 glVertex3f( 20.7482f, 0.0000f, -193.4343f);
 
-		 glEnd();
+		glEnd();
 		 
-		 glColor3f(1.0,1.0,0.0);
+		glColor3f(1.0,1.0,0.0);
 		 
-		 glTranslatef(13.0f,4.0f,50.0f);
-		 if (v<1){
-		glutSolidCube(3);
-		} 
+		glTranslatef(13.0f,4.0f,50.0f);
+		if (v<1){
+			glEnable(GL_LIGHTING);
+			GLfloat cyan[] = {1.f, 1.0f, 0.0f, 1.f};
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, cyan);
+			GLfloat lightpos0[] = {5., -100., 100., 0.};
+			glLightfv(GL_LIGHT0, GL_POSITION, lightpos0);
+			glEnable(GL_LIGHT0);
+			sphere.draw(0, 0, -5);
+			glDisable(GL_LIGHTING);
+		}
 		glTranslatef(14.0f,0.0f,-65.0f);
 		if (v<2){
-		glutSolidCube(3);
+			glShadeModel(GL_SMOOTH);
+			glEnable(GL_LIGHTING);
+			GLfloat lightpos0[] = {0.0f, 0., 10., 0.};
+			glLightfv(GL_LIGHT0, GL_POSITION, lightpos0);
+			glEnable(GL_LIGHT0);
+			sphere.draw(0, 0, -5);
+			glDisable(GL_LIGHTING);
 		} 
 		glTranslatef(15.0f,0.0f,-72.0f);
 		if (v<3){
-		glutSolidCube(3);
+			glShadeModel(GL_SMOOTH);
+			glEnable(GL_LIGHTING);
+			GLfloat lightpos0[] = {.5, 1., 1., 0.};
+			glLightfv(GL_LIGHT0, GL_POSITION, lightpos0);
+			glEnable(GL_LIGHT0);
+			sphere.draw(0, 0, -5);
+			glDisable(GL_LIGHTING);
 		} 
 		glTranslatef(-17.0f,0.0f,-71.0);
 		if (v<4){
-		glutSolidCube(3);
+			glShadeModel(GL_SMOOTH);
+			glEnable(GL_LIGHTING);
+			GLfloat lightpos0[] = {.5, 1., 1., 0.};
+			glLightfv(GL_LIGHT0, GL_POSITION, lightpos0);
+			glEnable(GL_LIGHT0);
+			sphere.draw(0, 0, -5);
+			glDisable(GL_LIGHTING);
 		}
 		glTranslatef(-25.0f,-4.0f,158.0f);
 		
@@ -860,7 +962,6 @@ void display()
 	// glCallList(ObjList);
 	glRotatef(rotY, 0.0f, -1.0f, 0.0f);
 	// glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
-	
 	// glTranslatef(-(initialx-sin(rotY)),0,-(initialz-cos(rotY)));
 
 	glPopMatrix();
@@ -933,6 +1034,7 @@ void display()
 		{
 			glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
 			glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[0][i]);
+			// glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, quote[0][i]);
 		}
 		lenghOfQuote = (int)strlen(quote[1]);
 		if (v == currTrack.numCheckpoints)
@@ -1559,8 +1661,8 @@ void keyboard ( unsigned char key, int mousePositionX, int mousePositionY )
 	    		currTrack.Z_max_world = 250.0f;
 	    		currTrack.Z_min_world = -100.0f;
 	    		currTrack.maxTime[0] = 45* CLOCKS_PER_SEC;
-	    		currTrack.maxTime[1] = 38* CLOCKS_PER_SEC;
-	    		currTrack.maxTime[2] = 33* CLOCKS_PER_SEC;
+	    		currTrack.maxTime[1] = 36* CLOCKS_PER_SEC;
+	    		currTrack.maxTime[2] = 30* CLOCKS_PER_SEC;
 	    	}
 	    	if (currTrack.id == 3)
 	    	{
@@ -1803,6 +1905,7 @@ int main(int argc, char **argv)
 	glutKeyboardUpFunc(keyUp);								// register Keyboard Handler
 	glutSpecialFunc( SpecialKeyboard );
 	// glutSpecialUpFunc(SpecialKeyUp);								// register Special Keyboard Handler
+	printf("the speed of the car is not able to go beyond %f, where limit is %s\n", speed, glGetString(GL_VERSION));
 
 	// loadObj(myCar.objFileName);								//replace porsche.obj with radar.obj or any other .obj to display it
 	initialize();

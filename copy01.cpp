@@ -1,7 +1,9 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 //angle of rotation
 float xpos = 0, ypos = 0, zpos = 0, xrot = 0, yrot = 0, angle=0.0;
@@ -51,7 +53,7 @@ void camera (void) {
 void display (void) {
     glClearColor (0.0,0.0,0.0,1.0); //clear the screen to black
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear the color buffer and the depth buffer
-    glLoadIdentity();  
+    glLoadIdentity();
     camera();
     enable();
     cube(); //call the cube drawing function
